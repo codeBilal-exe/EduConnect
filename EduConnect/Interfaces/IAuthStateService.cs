@@ -14,4 +14,5 @@ public interface IAuthStateService
     void Logout();
     bool IsInRole(UserRole role);
     void RegisterUser(Person person);
+    IEnumerable<Person> GetAllUsers();
 }

@@ -1,4 +1,7 @@
 @page "/admin/notifications"
+
+<PageTitle>EduConnect - Send Announcement</PageTitle>
+
 @using EduConnect.Interfaces
 @using EduConnect.Models
 @using EduConnect.Models.Enums
@@ -89,13 +92,24 @@
         if (SendToFaculty) rolesSelected.Add(UserRole.Faculty);
         if (SendToStudent) rolesSelected.Add(UserRole.Student);
 
-        // In a real implementation, we would:
-        // 1. Get all users from AuthStateService
-        // 2. Filter by selected roles
-        // 3. Create notifications for each
+        var allUsers = AuthStateService.GetAllUsers();
+        var targetUsers = allUsers.Where(u => rolesSelected.Contains(u.Role)).ToList();
+        
+        foreach (var user in targetUsers)
+        {
+            var notification = new Notification
+            {
+                Id = Guid.NewGuid(),
+                UserId = user.Id,
+                Message = Message,
+                Type = NotificationType.Announcement,
+                CreatedAt = DateTime.Now,
+                IsRead = false
+            };
+            NotificationService.SendNotification(notification);
+        }
 
-        // For now, we'll just show a success message
-        SuccessMessage = $"Announcement sent to {rolesSelected.Count} role(s)!";
+        SuccessMessage = $"Announcement sent to {targetUsers.Count} user(s) across {rolesSelected.Count} role(s)!";
         Message = string.Empty;
         SendToAdmin = false;
         SendToFaculty = false;

@@ -57,4 +57,9 @@ public class AuthStateService : IAuthStateService
             _users.Add(person);
         }
     }
+
+    public IEnumerable<Person> GetAllUsers()
+    {
+        return _users;
+    }
 }

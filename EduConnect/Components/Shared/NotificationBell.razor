@@ -51,7 +51,7 @@
     private int UnreadCount = 0;
     private List<Notification> RecentNotifications = new();
 
-    protected override async Task OnInitializedAsync()
+    protected override void OnInitialized()
     {
         if (NotificationService != null)
         {
@@ -90,11 +90,12 @@
         }
     }
 
-    async ValueTask IAsyncDisposable.DisposeAsync()
+    ValueTask IAsyncDisposable.DisposeAsync()
     {
         if (NotificationService != null)
         {
             NotificationService.OnNewNotification -= OnNotificationReceived;
         }
+        return ValueTask.CompletedTask;
     }
 }
