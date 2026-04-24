@@ -44,6 +44,9 @@
     [Inject]
     private INotificationService? NotificationService { get; set; }
 
+    [Inject]
+    private IAuthStateService? AuthStateService { get; set; }
+
     private bool ShowDropdown = false;
     private int UnreadCount = 0;
     private List<Notification> RecentNotifications = new();
@@ -53,16 +56,18 @@
         if (NotificationService != null)
         {
             NotificationService.OnNewNotification += OnNotificationReceived;
-            
-            // Load current user notifications (would need to get from auth service in real implementation)
-            // For now, we'll initialize with the current implementation
+            LoadNotifications();
         }
     }
 
     private void OnNotificationReceived(Notification notification)
     {
-        LoadNotifications();
-        StateHasChanged();
+        var currentUserId = AuthStateService?.CurrentUser?.Id;
+        if (currentUserId.HasValue && notification.UserId == currentUserId.Value)
+        {
+            LoadNotifications();
+            StateHasChanged();
+        }
     }
 
     private void ToggleDropdown()
@@ -76,13 +81,12 @@
 
     private void LoadNotifications()
     {
-        // In a real implementation, get current user from auth service
-        // For now, this is a placeholder
-        if (NotificationService != null)
+        if (NotificationService != null && AuthStateService?.CurrentUser != null)
         {
-            var allNotifications = NotificationService.GetNotificationsForUser(Guid.Empty);
+            var userId = AuthStateService.CurrentUser.Id;
+            var allNotifications = NotificationService.GetNotificationsForUser(userId);
             RecentNotifications = allNotifications.Take(5).ToList();
-            UnreadCount = NotificationService.GetUnreadCount(Guid.Empty);
+            UnreadCount = NotificationService.GetUnreadCount(userId);
         }
     }
 

@@ -13,4 +13,5 @@ public interface IAuthStateService
     bool Login(string email, string password);
     void Logout();
     bool IsInRole(UserRole role);
+    void RegisterUser(Person person);
 }

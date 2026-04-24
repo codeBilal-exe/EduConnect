@@ -49,4 +49,12 @@ public class AuthStateService : IAuthStateService
     {
         return CurrentUser?.Role == role;
     }
+
+    public void RegisterUser(Person person)
+    {
+        if (person != null && !_users.Any(u => u.Id == person.Id || u.Email == person.Email))
+        {
+            _users.Add(person);
+        }
+    }
 }
