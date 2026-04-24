@@ -7,10 +7,19 @@
 @inject IStudentService StudentService
 
 <div class="container-fluid mt-4">
-    <div class="row">
+    <div class="row mb-4">
         <div class="col-12">
-            <h1>Dashboard</h1>
-            <p class="lead">Welcome, @(AuthStateService.CurrentUser?.FullName ?? "User")!</p>
+            <div class="card bg-primary text-white shadow-sm border-0" style="background: linear-gradient(135deg, var(--brand-navy) 0%, var(--brand-blue) 100%);">
+                <div class="card-body p-4 d-flex align-items-center justify-content-between">
+                    <div>
+                        <h2 class="fw-bold mb-1">Dashboard</h2>
+                        <p class="mb-0 text-white-50 fs-5">Welcome back, @(AuthStateService.CurrentUser?.FullName ?? "User")!</p>
+                    </div>
+                    <div class="d-none d-md-block">
+                        <i class="bi bi-speedometer2" style="font-size: 3rem; opacity: 0.8;"></i>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 

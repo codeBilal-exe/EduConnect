@@ -1,10 +1,19 @@
-﻿@inherits LayoutComponentBase
+@inherits LayoutComponentBase
 @using EduConnect.Components.Auth
 
-<NavBar />
+<div class="d-flex flex-column min-vh-100 bg-light">
+    <NavBar />
 
-<div class="container-fluid mt-4">
-    @Body
+    <main class="flex-grow-1 container-fluid mt-4 mb-5 pb-5">
+        @Body
+    </main>
+
+    <footer class="mt-auto py-4 text-center text-white" style="background-color: var(--brand-navy); border-top: 4px solid var(--brand-gold);">
+        <div class="container">
+            <h5 class="fw-bold mb-1" style="letter-spacing: 2px;">CONNECT &bull; LEARN &bull; SUCCEED</h5>
+            <small class="text-white-50">UNIVERSITY ACADEMIC PORTAL &copy; @DateTime.Now.Year</small>
+        </div>
+    </footer>
 </div>
 
 <div id="blazor-error-ui">
