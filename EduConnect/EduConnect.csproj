@@ -6,4 +6,14 @@
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
 
+  <ItemGroup>
+    <Folder Include="Components\Auth\" />
+    <Folder Include="Components\Shared\" />
+    <Folder Include="Models\Enums\" />
+    <Folder Include="Models\Exceptions\" />
+    <Folder Include="Interfaces\" />
+    <Folder Include="Data\" />
+    <Folder Include="Services\" />
+  </ItemGroup>
+
 </Project>

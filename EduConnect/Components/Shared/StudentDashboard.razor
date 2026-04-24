@@ -1,0 +1,47 @@
+@namespace EduConnect.Components.Shared
+@using EduConnect.Interfaces
+@using EduConnect.Models
+
+@inject IAuthStateService AuthStateService
+@inject IStudentService StudentService
+
+<div class="row">
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">My Profile</h5>
+                @if (CurrentStudent != null)
+                {
+                    <p><strong>Semester:</strong> @CurrentStudent.Semester</p>
+                    <p><strong>Email:</strong> @CurrentStudent.Email</p>
+                    <p><strong>CGPA:</strong> <span class="badge bg-info">@ComputedCGPA.ToString("F2")</span></p>
+                }
+            </div>
+        </div>
+    </div>
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Quick Actions</h5>
+                <a href="/courses" class="btn btn-primary btn-sm me-2">Browse Courses</a>
+                <a href="/student/enroll" class="btn btn-primary btn-sm me-2">Enroll in Courses</a>
+                <a href="/student/grades" class="btn btn-primary btn-sm">View My Grades</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private Student? CurrentStudent;
+    private double ComputedCGPA = 0.0;
+
+    protected override void OnInitialized()
+    {
+        var currentUserId = AuthStateService?.CurrentUser?.Id;
+        if (currentUserId.HasValue)
+        {
+            CurrentStudent = StudentService.GetById(currentUserId.Value);
+            ComputedCGPA = StudentService.ComputeCGPA(currentUserId.Value);
+        }
+    }
+}

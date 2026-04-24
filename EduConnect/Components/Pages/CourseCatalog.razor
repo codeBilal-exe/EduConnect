@@ -1,0 +1,81 @@
+@page "/courses"
+@using EduConnect.Interfaces
+@using EduConnect.Models
+@using EduConnect.Components.Shared
+@namespace EduConnect.Components.Pages
+
+@inject ICourseService CourseService
+@inject IAuthStateService AuthStateService
+@inject NavigationManager NavigationManager
+
+<div class="container mt-4">
+    <h2>Course Catalog</h2>
+    <p>Available courses for enrollment</p>
+
+    @if (courses == null)
+    {
+        <LoadingSpinner IsLoading="true" />
+    }
+    else if (courses.Count == 0)
+    {
+        <div class="alert alert-info">No courses available.</div>
+    }
+    else
+    {
+        <div class="row">
+            @foreach (var course in courses)
+            {
+                <div class="col-md-4 mb-4">
+                    <CourseCard Course="course" OnEnroll="HandleEnroll" />
+                </div>
+            }
+        </div>
+    }
+
+    @if (!string.IsNullOrEmpty(ErrorMessage))
+    {
+        <AlertBox Message="@ErrorMessage" Type="EduConnect.Models.Enums.AlertType.Error" />
+    }
+    @if (!string.IsNullOrEmpty(SuccessMessage))
+    {
+        <AlertBox Message="@SuccessMessage" Type="EduConnect.Models.Enums.AlertType.Success" />
+    }
+</div>
+
+@code {
+    private List<Course>? courses;
+    private string ErrorMessage = string.Empty;
+    private string SuccessMessage = string.Empty;
+
+    protected override void OnInitialized()
+    {
+        if (AuthStateService.CurrentUser == null)
+        {
+            NavigationManager.NavigateTo("/login");
+            return;
+        }
+
+        courses = CourseService.GetAll();
+    }
+
+    private void HandleEnroll(Course course)
+    {
+        ErrorMessage = string.Empty;
+        SuccessMessage = string.Empty;
+
+        try
+        {
+            var studentId = AuthStateService.CurrentUser?.Id;
+            if (studentId.HasValue)
+            {
+                CourseService.EnrollStudent(course.Id, studentId.Value);
+                SuccessMessage = $"Successfully enrolled in {course.Title}!";
+                courses = CourseService.GetAll();
+            }
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = ex.Message;
+        }
+    }
+}

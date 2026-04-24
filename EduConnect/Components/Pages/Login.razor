@@ -1,0 +1,81 @@
+@page "/login"
+@using EduConnect.Interfaces
+@using EduConnect.Models.Enums
+@namespace EduConnect.Components.Pages
+
+@inject IAuthStateService AuthStateService
+@inject NavigationManager NavigationManager
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h4>EduConnect Login</h4>
+                </div>
+                <div class="card-body">
+                    @if (!string.IsNullOrEmpty(ErrorMessage))
+                    {
+                        <div class="alert alert-danger alert-dismissible fade show">
+                            @ErrorMessage
+                            <button type="button" class="btn-close" @onclick="ClearError"></button>
+                        </div>
+                    }
+
+                    <form @onsubmit="HandleLogin">
+                        <div class="mb-3">
+                            <label for="email" class="form-label">Email</label>
+                            <input type="email" class="form-control" id="email" @bind="Email"
+                                   placeholder="Enter your email">
+                            </div>
+                            <div class="mb-3">
+                                <label for="password" class="form-label">Password</label>
+                                <input type="password" class="form-control" id="password" @bind="Password"
+                                       placeholder="Enter your password">
+                                </div>
+                                <button type="submit" class="btn btn-primary w-100">Login</button>
+                            </form>
+
+                            <hr />
+                            <p class="text-muted small">
+                                <strong>Demo Credentials:</strong><br />
+                                Admin: admin@edu.com / admin123<br />
+                                Faculty: faculty1@edu.com / faculty123<br />
+                                Student: student1@edu.com / student123
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+@code {
+    private string Email = string.Empty;
+    private string Password = string.Empty;
+    private string ErrorMessage = string.Empty;
+
+    private void HandleLogin()
+    {
+        ErrorMessage = string.Empty;
+
+        if (string.IsNullOrEmpty(Email) || string.IsNullOrEmpty(Password))
+        {
+            ErrorMessage = "Email and password are required.";
+            return;
+        }
+
+        if (AuthStateService.Login(Email, Password))
+        {
+            NavigationManager.NavigateTo("/dashboard");
+        }
+        else
+        {
+            ErrorMessage = "Invalid email or password.";
+        }
+    }
+
+    private void ClearError()
+    {
+        ErrorMessage = string.Empty;
+    }
+}

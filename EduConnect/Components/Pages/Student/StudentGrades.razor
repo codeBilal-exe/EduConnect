@@ -1,0 +1,60 @@
+@page "/student/grades"
+@using EduConnect.Interfaces
+@using EduConnect.Models
+@using EduConnect.Components.Shared
+@namespace EduConnect.Components.Pages.Student
+
+@inject IGradeService GradeService
+@inject ICourseService CourseService
+@inject IStudentService StudentService
+@inject IAuthStateService AuthStateService
+@inject NavigationManager NavigationManager
+
+<div class="container mt-4">
+    <h2>My Grades</h2>
+
+    @if (currentStudent != null)
+    {
+        <div class="card mb-4">
+            <div class="card-body">
+                <h5 class="card-title">GPA Summary</h5>
+                <p class="display-4">
+                    <span class="badge bg-primary">@cgpa.ToString("F2")</span>
+                </p>
+            </div>
+        </div>
+
+        @if (grades == null)
+        {
+            <LoadingSpinner IsLoading="true" />
+        }
+        else if (grades.Count == 0)
+        {
+            <div class="alert alert-info">No grades recorded yet.</div>
+        }
+        else
+        {
+            <GradeTable GradeRecords="grades" />
+        }
+    }
+</div>
+
+@code {
+    private Student? currentStudent;
+    private List<GradeRecord>? grades;
+    private double cgpa = 0.0;
+
+    protected override void OnInitialized()
+    {
+        var userId = AuthStateService.CurrentUser?.Id;
+        if (!userId.HasValue)
+        {
+            NavigationManager.NavigateTo("/login");
+            return;
+        }
+
+        currentStudent = StudentService.GetById(userId.Value);
+        grades = GradeService.GetGradesForStudent(userId.Value);
+        cgpa = StudentService.ComputeCGPA(userId.Value);
+    }
+}

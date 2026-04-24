@@ -1,0 +1,60 @@
+@using EduConnect.Models
+@using EduConnect.Models.Enums
+@namespace EduConnect.Components.Shared
+
+@if (Course != null)
+{
+    <div class="card">
+        <div class="card-body">
+            <h5 class="card-title">@Course.Code - @Course.Title</h5>
+            <p class="card-text">
+                <strong>Credit Hours:</strong> @Course.CreditHours<br />
+                <strong>Enrollment:</strong> @Course.EnrollmentCount / @Course.MaxCapacity<br />
+                <strong>Status:</strong> <span class="badge bg-@GetStatusColor()">@Course.EnrollmentStatus</span>
+            </p>
+            <div class="progress mb-2">
+                <div class="progress-bar" role="progressbar" style="width: @GetProgressPercentage()%;"
+                     aria-valuenow="@Course.EnrollmentCount" aria-valuemin="0" aria-valuemax="@Course.MaxCapacity">
+                </div>
+            </div>
+            @if (Course.EnrollmentStatus != EnrollmentStatus.Full)
+            {
+                <button class="btn btn-primary btn-sm" @onclick="HandleEnroll">Enroll</button>
+            }
+            else
+            {
+                <button class="btn btn-secondary btn-sm" disabled>Full</button>
+            }
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public Course? Course { get; set; }
+
+    [Parameter]
+    public EventCallback<Course> OnEnroll { get; set; }
+
+    private string GetStatusColor() => Course?.EnrollmentStatus switch
+    {
+        EnrollmentStatus.Open => "success",
+        EnrollmentStatus.AlmostFull => "warning",
+        _ => "danger"
+    };
+
+    private int GetProgressPercentage()
+    {
+        if (Course == null || Course.MaxCapacity == 0)
+            return 0;
+        return (int)((Course.EnrollmentCount / (double)Course.MaxCapacity) * 100);
+    }
+
+    private async Task HandleEnroll()
+    {
+        if (Course != null)
+        {
+            await OnEnroll.InvokeAsync(Course);
+        }
+    }
+}

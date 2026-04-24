@@ -1,0 +1,213 @@
+@page "/admin/students/{Id:guid}"
+@using EduConnect.Interfaces
+@using EduConnect.Models
+@using EduConnect.Models.Enums
+@namespace EduConnect.Components.Pages.Admin
+
+@inject IStudentService StudentService
+@inject ICourseService CourseService
+@inject IGradeService GradeService
+@inject IAuthStateService AuthStateService
+@inject NavigationManager NavigationManager
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <a href="/admin/students" class="btn btn-secondary btn-sm mb-3">← Back to Students</a>
+        </div>
+    </div>
+
+    @if (!string.IsNullOrEmpty(ErrorMessage))
+    {
+        <div class="alert alert-danger">@ErrorMessage</div>
+    }
+
+    @if (Student != null)
+    {
+        <div class="card mb-4">
+            <div class="card-header bg-info text-white">
+                <h4>@Student.FullName</h4>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <p><strong>Email:</strong> @Student.Email</p>
+                        <p><strong>Semester:</strong> @Student.Semester</p>
+                        <p><strong>CGPA:</strong> <span class="badge bg-primary">@StudentCGPA.ToString("F2")</span></p>
+                    </div>
+                    <div class="col-md-6">
+                        <a href="@($"/admin/students/edit/{Student.Id}")" class="btn btn-warning">Edit</a>
+                        <button class="btn btn-danger" @onclick="ConfirmDelete">Delete</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5>Enrolled Courses</h5>
+            </div>
+            <div class="card-body">
+                @if (enrolledCourses == null || enrolledCourses.Count == 0)
+                {
+                    <p class="text-muted">No enrolled courses.</p>
+                }
+                else
+                {
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Code</th>
+                                    <th>Title</th>
+                                    <th>Credit Hours</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var course in enrolledCourses.OrderBy(c => c.Title))
+                                {
+                                    <tr>
+                                        <td>@course.Code</td>
+                                        <td>@course.Title</td>
+                                        <td>@course.CreditHours</td>
+                                        <td><span
+                                            class="badge bg-@GetStatusColor(course.EnrollmentStatus)">@course.EnrollmentStatus</span>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h5>Grade History</h5>
+            </div>
+            <div class="card-body">
+                @if (grades == null || grades.Count == 0)
+                {
+                    <p class="text-muted">No grades recorded.</p>
+                }
+                else
+                {
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Course</th>
+                                    <th>Marks</th>
+                                    <th>Grade</th>
+                                    <th>Grade Point</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var grade in grades)
+                                {
+                                    var course = CourseService.GetById(grade.CourseId);
+                                    <tr class="@GetRowClass(grade.LetterGrade)">
+                                        <td>@course?.Title</td>
+                                        <td>@grade.Marks</td>
+                                        <td><strong>@grade.LetterGrade</strong></td>
+                                        <td>@grade.GradePoint.ToString("F2")</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="alert alert-warning">Student not found.</div>
+    }
+
+    <ConfirmDialog Title="Delete Student"
+                   Message="Are you sure you want to delete this student? This action cannot be undone."
+                   IsVisible="ShowDeleteConfirm" OnConfirmed="HandleDelete" OnCancelled="CancelDelete" />
+</div>
+
+@code {
+    [Parameter]
+    public Guid Id { get; set; }
+
+    private Student? Student { get; set; }
+    private List<Course>? enrolledCourses;
+    private List<GradeRecord>? grades;
+    private double StudentCGPA = 0.0;
+    private bool ShowDeleteConfirm = false;
+    private string ErrorMessage = string.Empty;
+
+    protected override void OnInitialized()
+    {
+        if (AuthStateService.CurrentUser?.Role != UserRole.Admin)
+        {
+            NavigationManager.NavigateTo("/unauthorized");
+            return;
+        }
+
+        Student = StudentService.GetById(Id);
+        if (Student != null)
+        {
+            enrolledCourses = CourseService.GetAll()
+                .Where(c => c.EnrolledStudentIds.Contains(Id))
+                .ToList();
+            
+            grades = GradeService.GetGradesForStudent(Id);
+            StudentCGPA = StudentService.ComputeCGPA(Id);
+        }
+    }
+
+    private void ConfirmDelete()
+    {
+        ShowDeleteConfirm = true;
+    }
+
+    private void CancelDelete()
+    {
+        ShowDeleteConfirm = false;
+    }
+
+    private void HandleDelete()
+    {
+        if (Student == null)
+            return;
+
+        try
+        {
+            // Check if student has active enrollments
+            var hasActiveEnrollments = enrolledCourses?.Count > 0;
+            if (hasActiveEnrollments)
+            {
+                throw new StudentHasActiveEnrollmentsException(Student.FullName);
+            }
+
+            StudentService.Delete(Student.Id);
+            NavigationManager.NavigateTo("/admin/students");
+        }
+        catch (StudentHasActiveEnrollmentsException ex)
+        {
+            ShowDeleteConfirm = false;
+            ErrorMessage = ex.Message;
+        }
+    }
+
+    private string GetStatusColor(EnrollmentStatus status) => status switch
+    {
+        EnrollmentStatus.Open => "success",
+        EnrollmentStatus.AlmostFull => "warning",
+        _ => "danger"
+    };
+
+    private string GetRowClass(string letterGrade) => letterGrade switch
+    {
+        "A" or "B" => "table-success",
+        "C" or "D" => "table-warning",
+        _ => "table-danger"
+    };
+}

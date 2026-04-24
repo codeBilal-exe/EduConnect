@@ -1,0 +1,158 @@
+@page "/student/enroll"
+@using EduConnect.Interfaces
+@using EduConnect.Models
+@using EduConnect.Models.Enums
+@using EduConnect.Components.Shared
+@namespace EduConnect.Components.Pages.Student
+
+@inject ICourseService CourseService
+@inject IAuthStateService AuthStateService
+@inject NavigationManager NavigationManager
+
+<div class="container-fluid mt-4">
+    <h2>Enroll in Courses</h2>
+
+    @if (!string.IsNullOrEmpty(ErrorMessage))
+    {
+        <AlertBox Message="@ErrorMessage" Type="AlertType.Error" />
+    }
+    @if (!string.IsNullOrEmpty(SuccessMessage))
+    {
+        <AlertBox Message="@SuccessMessage" Type="AlertType.Success" />
+    }
+
+    @if (availableCourses == null)
+    {
+        <LoadingSpinner IsLoading="true" />
+    }
+    else if (availableCourses.Count == 0)
+    {
+        <div class="alert alert-info">No available courses for enrollment.</div>
+    }
+    else
+    {
+        <div class="row">
+            @foreach (var course in availableCourses)
+            {
+                <div class="col-md-4 mb-4">
+                    <div class="card h-100">
+                        <div class="card-header bg-info text-white">
+                            <h5>@course.Code</h5>
+                        </div>
+                        <div class="card-body d-flex flex-column">
+                            <h6 class="card-title">@course.Title</h6>
+                            <p class="card-text flex-grow-1">
+                                <strong>Credit Hours:</strong> @course.CreditHours<br />
+                                <strong>Enrollment:</strong> @course.EnrollmentCount / @course.MaxCapacity<br />
+                                <strong>Status:</strong> <span
+                                class="badge bg-@GetStatusColor(course.EnrollmentStatus)">@course.EnrollmentStatus</span>
+                            </p>
+                            <div class="progress mb-3">
+                                <div class="progress-bar" role="progressbar" style="width: @GetProgressPercentage(course)%;"
+                                     aria-valuenow="@course.EnrollmentCount" aria-valuemin="0"
+                                     aria-valuemax="@course.MaxCapacity">
+                                </div>
+                            </div>
+                            <button class="btn btn-primary" @onclick="() => HandleEnroll(course)"
+                                    disabled="@(course.EnrollmentStatus == EnrollmentStatus.Full)">
+                                @if (course.EnrollmentStatus == EnrollmentStatus.Full)
+                                {
+                                    <span>Full - Cannot Enroll</span>
+                                }
+                                else
+                                {
+                                    <span>Enroll</span>
+                                }
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+
+    <div class="mt-5">
+        <a href="/student/grades" class="btn btn-secondary">View My Grades</a>
+    </div>
+</div>
+
+@code {
+    private List<Course>? availableCourses;
+    private List<Course>? enrolledCourses;
+    private string ErrorMessage = string.Empty;
+    private string SuccessMessage = string.Empty;
+
+    protected override void OnInitialized()
+    {
+        var userId = AuthStateService.CurrentUser?.Id;
+        if (!userId.HasValue || AuthStateService.CurrentUser?.Role != UserRole.Student)
+        {
+            NavigationManager.NavigateTo("/unauthorized");
+            return;
+        }
+
+        LoadData();
+    }
+
+    private void LoadData()
+    {
+        var userId = AuthStateService.CurrentUser?.Id;
+        if (!userId.HasValue)
+            return;
+
+        // Get all available (non-full) courses
+        availableCourses = CourseService.GetAvailableCourses();
+        
+        // Get courses the student is already enrolled in
+        var allCourses = CourseService.GetAll();
+        enrolledCourses = allCourses
+            .Where(c => c.EnrolledStudentIds.Contains(userId.Value))
+            .ToList();
+
+        // Remove already enrolled courses from available list
+        availableCourses = availableCourses
+            .Where(c => !c.EnrolledStudentIds.Contains(userId.Value))
+            .ToList();
+    }
+
+    private void HandleEnroll(Course course)
+    {
+        ErrorMessage = string.Empty;
+        SuccessMessage = string.Empty;
+
+        try
+        {
+            var studentId = AuthStateService.CurrentUser?.Id;
+            if (!studentId.HasValue)
+                return;
+
+            CourseService.EnrollStudent(course.Id, studentId.Value);
+            SuccessMessage = $"Successfully enrolled in {course.Title}!";
+            
+            // Reload data
+            LoadData();
+        }
+        catch (CourseFullException ex)
+        {
+            ErrorMessage = ex.Message;
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = ex.Message;
+        }
+    }
+
+    private string GetStatusColor(EnrollmentStatus status) => status switch
+    {
+        EnrollmentStatus.Open => "success",
+        EnrollmentStatus.AlmostFull => "warning",
+        _ => "danger"
+    };
+
+    private int GetProgressPercentage(Course course)
+    {
+        if (course.MaxCapacity == 0)
+            return 0;
+        return (int)((course.EnrollmentCount / (double)course.MaxCapacity) * 100);
+    }
+}

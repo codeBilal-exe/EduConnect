@@ -1,0 +1,61 @@
+@using EduConnect.Interfaces
+@using EduConnect.Models.Enums
+@using Microsoft.AspNetCore.Components.Routing
+@namespace EduConnect.Components.Auth
+
+@implements IDisposable
+
+<CascadingValue Value="AuthState">
+    @if (AuthState?.CurrentUser != null)
+    {
+        @ChildContent
+    }
+    else
+    {
+        <NavigationLock ConfirmExternalNavigation="false" />
+        <RedirectToLogin />
+    }
+</CascadingValue>
+
+@code {
+    [Inject]
+    private NavigationManager? NavigationManager { get; set; }
+
+    [Inject]
+    private IAuthStateService? AuthState { get; set; }
+
+    [Parameter]
+    public UserRole[] AllowedRoles { get; set; } = Array.Empty<UserRole>();
+
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+
+    protected override void OnInitialized()
+    {
+        if (AuthState?.CurrentUser == null)
+        {
+            NavigationManager?.NavigateTo("/login", forceLoad: true);
+            return;
+        }
+
+        if (AllowedRoles.Length > 0 && !AllowedRoles.Contains(AuthState.CurrentUser.Role))
+        {
+            NavigationManager?.NavigateTo("/unauthorized", forceLoad: true);
+        }
+
+        AuthState.OnAuthStateChanged += StateChanged;
+    }
+
+    private void StateChanged()
+    {
+        StateHasChanged();
+    }
+
+    void IDisposable.Dispose()
+    {
+        if (AuthState != null)
+        {
+            AuthState.OnAuthStateChanged -= StateChanged;
+        }
+    }
+}

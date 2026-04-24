@@ -1,0 +1,119 @@
+@using EduConnect.Interfaces
+@using EduConnect.Models.Enums
+@namespace EduConnect.Components.Auth
+
+@implements IDisposable
+
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="/">EduConnect</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ms-auto">
+                @if (CurrentUser != null)
+                {
+                    <li class="nav-item">
+                        <span class="navbar-text me-3">
+                            @CurrentUser.FullName
+                            <span class="badge bg-primary">@CurrentUser.Role</span>
+                        </span>
+                    </li>
+
+                    @if (CurrentUser.Role == UserRole.Admin)
+                    {
+                        <li class="nav-item">
+                            <a class="nav-link" href="/admin/students">Students</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/admin/courses">Courses</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/admin/reports/grades">Grade Reports</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/admin/notifications">Announcements</a>
+                        </li>
+                    }
+
+                    @if (CurrentUser.Role == UserRole.Faculty)
+                    {
+                        <li class="nav-item">
+                            <a class="nav-link" href="/faculty/courses">My Courses</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/faculty/grades">Grade Entry</a>
+                        </li>
+                    }
+
+                    @if (CurrentUser.Role == UserRole.Student)
+                    {
+                        <li class="nav-item">
+                            <a class="nav-link" href="/courses">Catalog</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/student/enroll">Enroll</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/student/grades">My Grades</a>
+                        </li>
+                    }
+
+                    <li class="nav-item">
+                        <a class="nav-link" href="/notifications">
+                            📬 Notifications
+                        </a>
+                    </li>
+
+                    <li class="nav-item">
+                        <button class="btn btn-outline-light btn-sm" @onclick="HandleLogout">Logout</button>
+                    </li>
+                }
+                else
+                {
+                    <li class="nav-item">
+                        <a class="nav-link" href="/login">Login</a>
+                    </li>
+                }
+            </ul>
+        </div>
+    </div>
+</nav>
+
+@code {
+    [Inject]
+    private IAuthStateService? AuthStateService { get; set; }
+
+    [Inject]
+    private NavigationManager? NavigationManager { get; set; }
+
+    private Person? CurrentUser => AuthStateService?.CurrentUser;
+
+    protected override void OnInitialized()
+    {
+        if (AuthStateService != null)
+        {
+            AuthStateService.OnAuthStateChanged += StateChanged;
+        }
+    }
+
+    private void StateChanged()
+    {
+        StateHasChanged();
+    }
+
+    private void HandleLogout()
+    {
+        AuthStateService?.Logout();
+        NavigationManager?.NavigateTo("/login", forceLoad: true);
+    }
+
+    void IDisposable.Dispose()
+    {
+        if (AuthStateService != null)
+        {
+            AuthStateService.OnAuthStateChanged -= StateChanged;
+        }
+    }
+}

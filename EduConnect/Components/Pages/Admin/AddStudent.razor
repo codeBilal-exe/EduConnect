@@ -1,0 +1,108 @@
+@page "/admin/students/add"
+@using EduConnect.Interfaces
+@using EduConnect.Models
+@using EduConnect.Models.Enums
+@namespace EduConnect.Components.Pages.Admin
+
+@inject IStudentService StudentService
+@inject IAuthStateService AuthStateService
+@inject NavigationManager NavigationManager
+
+<div class="container mt-4">
+    <h2>Add New Student</h2>
+
+    @if (!string.IsNullOrEmpty(ErrorMessage))
+    {
+        <div class="alert alert-danger">@ErrorMessage</div>
+    }
+
+    <div class="card">
+        <div class="card-body">
+            <form @onsubmit="HandleSubmit">
+                <div class="mb-3">
+                    <label class="form-label">Full Name</label>
+                    <input type="text" class="form-control" @bind="newStudent.FullName" />
+                    @if (!string.IsNullOrEmpty(FullNameError))
+                    {
+                        <small class="text-danger">@FullNameError</small>
+                    }
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Email</label>
+                    <input type="email" class="form-control" @bind="newStudent.Email" />
+                    @if (!string.IsNullOrEmpty(EmailError))
+                    {
+                        <small class="text-danger">@EmailError</small>
+                    }
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Semester</label>
+                    <select class="form-control" @bind="newStudent.Semester">
+                        @for (int i = 1; i <= 8; i++)
+                        {
+                            <option value="@i">@i</option>
+                        }
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Password</label>
+                    <input type="password" class="form-control" @bind="newStudent.PasswordHash" />
+                </div>
+
+                <button type="submit" class="btn btn-primary">Add Student</button>
+                <a href="/admin/students" class="btn btn-secondary">Cancel</a>
+            </form>
+        </div>
+    </div>
+</div>
+
+@code {
+    private Student newStudent = new();
+    private string ErrorMessage = string.Empty;
+    private string FullNameError = string.Empty;
+    private string EmailError = string.Empty;
+
+    protected override void OnInitialized()
+    {
+        if (AuthStateService.CurrentUser?.Role != UserRole.Admin)
+        {
+            NavigationManager.NavigateTo("/unauthorized");
+            return;
+        }
+
+        newStudent.Id = Guid.NewGuid();
+        newStudent.Role = UserRole.Student;
+    }
+
+    private void HandleSubmit()
+    {
+        ErrorMessage = string.Empty;
+        FullNameError = string.Empty;
+        EmailError = string.Empty;
+
+        if (string.IsNullOrWhiteSpace(newStudent.FullName))
+        {
+            FullNameError = "Full name is required.";
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(newStudent.Email))
+        {
+            EmailError = "Email is required.";
+            return;
+        }
+
+        try
+        {
+            StudentService.Add(newStudent);
+            NavigationManager.NavigateTo("/admin/students");
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = ex.Message;
+        }
+    }
+}

@@ -1,0 +1,142 @@
+@page "/admin/students"
+@using EduConnect.Interfaces
+@using EduConnect.Models
+@using EduConnect.Components.Shared
+@namespace EduConnect.Components.Pages.Admin
+
+@inject IStudentService StudentService
+@inject IAuthStateService AuthStateService
+@inject NavigationManager NavigationManager
+
+<div class="container-fluid mt-4">
+    <h2>Student Management</h2>
+    <a href="/admin/students/add" class="btn btn-primary mb-3">Add New Student</a>
+
+    <div class="mb-3">
+        <input type="text" class="form-control" placeholder="Search by name..." @bind="SearchTerm" />
+    </div>
+
+    @if (displayedStudents == null)
+    {
+        <LoadingSpinner IsLoading="true" />
+    }
+    else if (displayedStudents.Count == 0)
+    {
+        <div class="alert alert-info">No students found.</div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Semester</th>
+                        <th>CGPA</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var student in displayedStudents)
+                    {
+                        var cgpa = StudentService.ComputeCGPA(student.Id);
+                        <tr>
+                            <td>@student.FullName</td>
+                            <td>@student.Email</td>
+                            <td>@student.Semester</td>
+                            <td><span class="badge bg-info">@cgpa.ToString("F2")</span></td>
+                            <td>
+                                <a href="@($"/admin/students/{student.Id}")" class="btn btn-sm btn-info">View</a>
+                                <a href="@($"/admin/students/edit/{student.Id}")" class="btn btn-sm btn-warning">Edit</a>
+                                <button class="btn btn-sm btn-danger" @onclick="() => ConfirmDelete(student)">Delete</button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+
+    <ConfirmDialog Title="Confirm Deletion" Message="Are you sure you want to delete this student?"
+                   IsVisible="ShowConfirmDialog" OnConfirmed="HandleDelete" OnCancelled="CancelDelete" />
+</div>
+
+@code {
+    private List<Student>? allStudents;
+    private string searchTerm = string.Empty;
+    private bool showConfirmDialog = false;
+    private Student? studentToDelete;
+
+    public string SearchTerm
+    {
+        get => searchTerm;
+        set
+        {
+            searchTerm = value;
+            StateHasChanged();
+        }
+    }
+
+    public List<Student> displayedStudents
+    {
+        get
+        {
+            if (allStudents == null)
+                return new List<Student>();
+
+            if (string.IsNullOrEmpty(searchTerm))
+                return allStudents;
+
+            return StudentService.Search(searchTerm);
+        }
+    }
+
+    public bool ShowConfirmDialog
+    {
+        get => showConfirmDialog;
+        set => showConfirmDialog = value;
+    }
+
+    protected override void OnInitialized()
+    {
+        if (AuthStateService.CurrentUser?.Role != EduConnect.Models.Enums.UserRole.Admin)
+        {
+            NavigationManager.NavigateTo("/unauthorized");
+            return;
+        }
+
+        allStudents = StudentService.GetAll();
+    }
+
+    private void ConfirmDelete(Student student)
+    {
+        studentToDelete = student;
+        showConfirmDialog = true;
+        StateHasChanged();
+    }
+
+    private void CancelDelete()
+    {
+        studentToDelete = null;
+        showConfirmDialog = false;
+    }
+
+    private void HandleDelete()
+    {
+        if (studentToDelete != null)
+        {
+            try
+            {
+                StudentService.Delete(studentToDelete.Id);
+                allStudents = StudentService.GetAll();
+                showConfirmDialog = false;
+                studentToDelete = null;
+            }
+            catch (Exception)
+            {
+                // Handle exception (log or show message)
+            }
+        }
+    }
+}

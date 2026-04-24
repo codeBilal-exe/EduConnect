@@ -1,0 +1,45 @@
+@using EduConnect.Models
+@namespace EduConnect.Components.Shared
+
+@if (GradeRecords != null && GradeRecords.Count > 0)
+{
+    <div class="table-responsive">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Course</th>
+                    <th>Marks</th>
+                    <th>Grade</th>
+                    <th>Grade Point</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var grade in GradeRecords)
+                {
+                    <tr class="@GetRowClass(grade.LetterGrade)">
+                        <td>@grade.CourseId</td>
+                        <td>@grade.Marks</td>
+                        <td><strong>@grade.LetterGrade</strong></td>
+                        <td>@grade.GradePoint.ToString("F2")</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+else
+{
+    <p>No grade records available.</p>
+}
+
+@code {
+    [Parameter]
+    public List<GradeRecord>? GradeRecords { get; set; }
+
+    private string GetRowClass(string letterGrade) => letterGrade switch
+    {
+        "A" or "B" => "table-success",
+        "C" or "D" => "table-warning",
+        _ => "table-danger"
+    };
+}

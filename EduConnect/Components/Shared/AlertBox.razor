@@ -1,0 +1,23 @@
+@using EduConnect.Models.Enums
+@namespace EduConnect.Components.Shared
+
+<div class="alert alert-@GetAlertClass() alert-dismissible fade show" role="alert">
+    @Message
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+</div>
+
+@code {
+    [Parameter]
+    public string Message { get; set; } = string.Empty;
+
+    [Parameter]
+    public AlertType Type { get; set; } = AlertType.Info;
+
+    private string GetAlertClass() => Type switch
+    {
+        AlertType.Success => "success",
+        AlertType.Warning => "warning",
+        AlertType.Error => "danger",
+        _ => "info"
+    };
+}

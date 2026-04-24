@@ -1,0 +1,39 @@
+@page "/dashboard"
+@using EduConnect.Interfaces
+@using EduConnect.Models.Enums
+@namespace EduConnect.Components.Pages
+
+@inject IAuthStateService AuthStateService
+@inject IStudentService StudentService
+
+<div class="container-fluid mt-4">
+    <div class="row">
+        <div class="col-12">
+            <h1>Dashboard</h1>
+            <p class="lead">Welcome, @(AuthStateService.CurrentUser?.FullName ?? "User")!</p>
+        </div>
+    </div>
+
+    @if (AuthStateService.CurrentUser?.Role == UserRole.Admin)
+    {
+        <AdminDashboard />
+    }
+    else if (AuthStateService.CurrentUser?.Role == UserRole.Faculty)
+    {
+        <FacultyDashboard />
+    }
+    else if (AuthStateService.CurrentUser?.Role == UserRole.Student)
+    {
+        <StudentDashboard />
+    }
+</div>
+
+@code {
+    protected override void OnInitialized()
+    {
+        if (AuthStateService.CurrentUser == null)
+        {
+            // This would normally redirect to login, but for now we'll let the auth guard handle it
+        }
+    }
+}

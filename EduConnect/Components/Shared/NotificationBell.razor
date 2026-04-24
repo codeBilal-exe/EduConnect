@@ -1,0 +1,96 @@
+@using EduConnect.Interfaces
+@using EduConnect.Models
+@namespace EduConnect.Components.Shared
+
+@implements IAsyncDisposable
+
+<div class="btn-group" role="group">
+    <button type="button" class="btn btn-outline-primary position-relative" @onclick="ToggleDropdown">
+        🔔
+        @if (UnreadCount > 0)
+        {
+            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                @UnreadCount
+                <span class="visually-hidden">unread notifications</span>
+            </span>
+        }
+    </button>
+    @if (ShowDropdown)
+    {
+        <div class="dropdown-menu show p-3" style="min-width: 300px;">
+            @if (RecentNotifications.Count > 0)
+            {
+                <div style="max-height: 400px; overflow-y: auto;">
+                    @foreach (var notif in RecentNotifications)
+                    {
+                        <div class="card mb-2">
+                            <div class="card-body p-2">
+                                <p class="card-text small">@notif.Message</p>
+                                <small class="text-muted">@notif.CreatedAt.ToString("g")</small>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+            else
+            {
+                <p class="text-muted small">No notifications</p>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    [Inject]
+    private INotificationService? NotificationService { get; set; }
+
+    private bool ShowDropdown = false;
+    private int UnreadCount = 0;
+    private List<Notification> RecentNotifications = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (NotificationService != null)
+        {
+            NotificationService.OnNewNotification += OnNotificationReceived;
+            
+            // Load current user notifications (would need to get from auth service in real implementation)
+            // For now, we'll initialize with the current implementation
+        }
+    }
+
+    private void OnNotificationReceived(Notification notification)
+    {
+        LoadNotifications();
+        StateHasChanged();
+    }
+
+    private void ToggleDropdown()
+    {
+        ShowDropdown = !ShowDropdown;
+        if (ShowDropdown)
+        {
+            LoadNotifications();
+        }
+    }
+
+    private void LoadNotifications()
+    {
+        // In a real implementation, get current user from auth service
+        // For now, this is a placeholder
+        if (NotificationService != null)
+        {
+            var allNotifications = NotificationService.GetNotificationsForUser(Guid.Empty);
+            RecentNotifications = allNotifications.Take(5).ToList();
+            UnreadCount = NotificationService.GetUnreadCount(Guid.Empty);
+        }
+    }
+
+    async ValueTask IAsyncDisposable.DisposeAsync()
+    {
+        if (NotificationService != null)
+        {
+            NotificationService.OnNewNotification -= OnNotificationReceived;
+        }
+    }
+}

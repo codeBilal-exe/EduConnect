@@ -1,0 +1,28 @@
+@namespace EduConnect.Components.Shared
+@using EduConnect.Interfaces
+
+@inject ICourseService CourseService
+
+<div class="row">
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">My Courses</h5>
+                <a href="/faculty/courses" class="btn btn-primary btn-sm w-100 mb-2">View My Courses</a>
+                <a href="/faculty/grades" class="btn btn-primary btn-sm w-100">Enter Grades</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Recent Activity</h5>
+                <p class="text-muted">No recent activity</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+
+}

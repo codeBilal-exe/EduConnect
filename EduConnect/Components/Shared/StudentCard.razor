@@ -1,0 +1,24 @@
+@using EduConnect.Models
+@namespace EduConnect.Components.Shared
+
+@if (Student != null)
+{
+    <div class="card">
+        <div class="card-body">
+            <h5 class="card-title">@Student.FullName</h5>
+            <p class="card-text">
+                <strong>Semester:</strong> @Student.Semester<br />
+                <strong>Email:</strong> @Student.Email<br />
+                <strong>CGPA:</strong> <span class="badge bg-info">@CGPA.ToString("F2")</span>
+            </p>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public Student? Student { get; set; }
+
+    [Parameter]
+    public double CGPA { get; set; } = 0.0;
+}

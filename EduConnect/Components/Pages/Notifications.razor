@@ -1,0 +1,90 @@
+@page "/notifications"
+@using EduConnect.Interfaces
+@using EduConnect.Models
+@namespace EduConnect.Components.Pages
+
+@inject INotificationService NotificationService
+@inject IAuthStateService AuthStateService
+@inject NavigationManager NavigationManager
+
+@implements IAsyncDisposable
+
+<div class="container mt-4">
+    <h2>Notifications</h2>
+
+    @if (notifications == null)
+    {
+        <p>Loading...</p>
+    }
+    else if (notifications.Count == 0)
+    {
+        <div class="alert alert-info">No notifications.</div>
+    }
+    else
+    {
+        <div class="row">
+            @foreach (var notif in notifications)
+            {
+                <div class="col-md-6 mb-3">
+                    <div class="card @(notif.IsRead ? "bg-light" : "")">
+                        <div class="card-body">
+                            <h5 class="card-title">@notif.Type</h5>
+                            <p class="card-text">@notif.Message</p>
+                            <small class="text-muted">@notif.CreatedAt.ToString("g")</small>
+                            @if (!notif.IsRead)
+                            {
+                                <div>
+                                    <button class="btn btn-sm btn-primary mt-2" @onclick="() => MarkAsRead(notif.Id)">Mark as
+                                        Read</button>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+
+@code {
+    private List<Notification>? notifications;
+
+    protected override void OnInitialized()
+    {
+        var userId = AuthStateService.CurrentUser?.Id;
+        if (!userId.HasValue)
+        {
+            NavigationManager.NavigateTo("/login");
+            return;
+        }
+
+        notifications = NotificationService.GetNotificationsForUser(userId.Value);
+        NotificationService.OnNewNotification += HandleNewNotification;
+    }
+
+    private void HandleNewNotification(Notification notif)
+    {
+        var userId = AuthStateService.CurrentUser?.Id;
+        if (notif.UserId == userId)
+        {
+            notifications?.Insert(0, notif);
+            StateHasChanged();
+        }
+    }
+
+    private void MarkAsRead(Guid notificationId)
+    {
+        NotificationService.MarkAsRead(notificationId);
+        var notif = notifications?.FirstOrDefault(n => n.Id == notificationId);
+        if (notif != null)
+        {
+            notif.IsRead = true;
+        }
+        StateHasChanged();
+    }
+
+    async ValueTask IAsyncDisposable.DisposeAsync()
+    {
+        NotificationService.OnNewNotification -= HandleNewNotification;
+    }
+}
