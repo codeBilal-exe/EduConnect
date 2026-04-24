@@ -11,57 +11,59 @@
 @inject IAuthStateService AuthStateService
 @inject NavigationManager NavigationManager
 
-<div class="container mt-4">
-    <h2>Send Announcements</h2>
+<AuthGuard AllowedRoles="new[] { UserRole.Admin }">
+    <div class="container mt-4">
+        <h2>Send Announcements</h2>
 
-    @if (!string.IsNullOrEmpty(SuccessMessage))
-    {
-        <div class="alert alert-success alert-dismissible fade show">
-            @SuccessMessage
-            <button type="button" class="btn-close" @onclick="ClearSuccess"></button>
-        </div>
-    }
+        @if (!string.IsNullOrEmpty(SuccessMessage))
+        {
+            <div class="alert alert-success alert-dismissible fade show">
+                @SuccessMessage
+                <button type="button" class="btn-close" @onclick="ClearSuccess"></button>
+            </div>
+        }
 
-    <div class="card">
-        <div class="card-body">
-            <form @onsubmit="HandleSubmit">
-                <div class="mb-3">
-                    <label for="message" class="form-label">Message</label>
-                    <textarea class="form-control" id="message" @bind="Message" rows="4"
-                              placeholder="Enter your announcement message"></textarea>
-                    @if (string.IsNullOrEmpty(Message))
-                    {
-                        <small class="text-muted">Message is required.</small>
-                    }
-                </div>
-
-                <div class="mb-3">
-                    <label class="form-label">Send to Roles</label>
-                    <div class="form-check">
-                        <input class="form-check-input" type="checkbox" id="adminCheck" @bind="SendToAdmin" />
-                        <label class="form-check-label" for="adminCheck">
-                            Admin
-                        </label>
+        <div class="card">
+            <div class="card-body">
+                <form @onsubmit="HandleSubmit">
+                    <div class="mb-3">
+                        <label for="message" class="form-label">Message</label>
+                        <textarea class="form-control" id="message" @bind="Message" rows="4"
+                                  placeholder="Enter your announcement message"></textarea>
+                        @if (string.IsNullOrEmpty(Message))
+                        {
+                            <small class="text-muted">Message is required.</small>
+                        }
                     </div>
-                    <div class="form-check">
-                        <input class="form-check-input" type="checkbox" id="facultyCheck" @bind="SendToFaculty" />
-                        <label class="form-check-label" for="facultyCheck">
-                            Faculty
-                        </label>
-                    </div>
-                    <div class="form-check">
-                        <input class="form-check-input" type="checkbox" id="studentCheck" @bind="SendToStudent" />
-                        <label class="form-check-label" for="studentCheck">
-                            Student
-                        </label>
-                    </div>
-                </div>
 
-                <button type="submit" class="btn btn-primary">Send Announcement</button>
-            </form>
+                    <div class="mb-3">
+                        <label class="form-label">Send to Roles</label>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="adminCheck" @bind="SendToAdmin" />
+                            <label class="form-check-label" for="adminCheck">
+                                Admin
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="facultyCheck" @bind="SendToFaculty" />
+                            <label class="form-check-label" for="facultyCheck">
+                                Faculty
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="studentCheck" @bind="SendToStudent" />
+                            <label class="form-check-label" for="studentCheck">
+                                Student
+                            </label>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">Send Announcement</button>
+                </form>
+            </div>
         </div>
     </div>
-</div>
+</AuthGuard>
 
 @code {
     private string Message = string.Empty;
@@ -72,11 +74,6 @@
 
     protected override void OnInitialized()
     {
-        if (AuthStateService.CurrentUser?.Role != UserRole.Admin)
-        {
-            NavigationManager.NavigateTo("/unauthorized");
-            return;
-        }
     }
 
     private void HandleSubmit()

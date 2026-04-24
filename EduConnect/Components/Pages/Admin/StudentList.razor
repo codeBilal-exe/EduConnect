@@ -11,65 +11,73 @@
 @inject IAuthStateService AuthStateService
 @inject NavigationManager NavigationManager
 
-<div class="container-fluid mt-4">
-    <h2>Student Management</h2>
-    <a href="/admin/students/add" class="btn btn-primary mb-3">Add New Student</a>
+<AuthGuard AllowedRoles="new[] { UserRole.Admin }">
+    <div class="container-fluid mt-4">
+        <h2>Student Management</h2>
+        <a href="/admin/students/add" class="btn btn-primary mb-3">Add New Student</a>
 
-    <div class="mb-3">
-        <input type="text" class="form-control" placeholder="Search by name..." @bind="SearchTerm" />
-    </div>
-
-    @if (displayedStudents == null)
-    {
-        <LoadingSpinner IsLoading="true" />
-    }
-    else if (displayedStudents.Count == 0)
-    {
-        <div class="alert alert-info">No students found.</div>
-    }
-    else
-    {
-        <div class="table-responsive">
-            <table class="table table-striped">
-                <thead>
-                    <tr>
-                        <th>Name</th>
-                        <th>Email</th>
-                        <th>Semester</th>
-                        <th>CGPA</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var student in displayedStudents)
-                    {
-                        var cgpa = StudentService.ComputeCGPA(student.Id);
-                        <tr>
-                            <td>@student.FullName</td>
-                            <td>@student.Email</td>
-                            <td>@student.Semester</td>
-                            <td><span class="badge bg-info">@cgpa.ToString("F2")</span></td>
-                            <td>
-                                <a href="@($"/admin/students/{student.Id}")" class="btn btn-sm btn-info">View</a>
-                                <a href="@($"/admin/students/edit/{student.Id}")" class="btn btn-sm btn-warning">Edit</a>
-                                <button class="btn btn-sm btn-danger" @onclick="() => ConfirmDelete(student)">Delete</button>
-                            </td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
+        <div class="mb-3">
+            <input type="text" class="form-control" placeholder="Search by name..." @bind="SearchTerm" @bind:event="oninput" />
         </div>
-    }
 
-    <ConfirmDialog Title="Confirm Deletion" Message="Are you sure you want to delete this student?"
-                   IsVisible="ShowConfirmDialog" OnConfirmed="HandleDelete" OnCancelled="CancelDelete" />
-</div>
+        @if (!string.IsNullOrEmpty(ErrorMessage))
+        {
+            <div class="alert alert-danger">@ErrorMessage</div>
+        }
+
+        @if (displayedStudents == null)
+        {
+            <LoadingSpinner IsLoading="true" />
+        }
+        else if (displayedStudents.Count == 0)
+        {
+            <div class="alert alert-info">No students found.</div>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Semester</th>
+                            <th>CGPA</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var student in displayedStudents)
+                        {
+                            var cgpa = StudentService.ComputeCGPA(student.Id);
+                            <tr>
+                                <td>@student.FullName</td>
+                                <td>@student.Email</td>
+                                <td>@student.Semester</td>
+                                <td><span class="badge bg-info">@cgpa.ToString("F2")</span></td>
+                                <td>
+                                    <a href="@($"/admin/students/{student.Id}")" class="btn btn-sm btn-info">View</a>
+                                    <a href="@($"/admin/students/edit/{student.Id}")" class="btn btn-sm btn-warning">Edit</a>
+                                    <button class="btn btn-sm btn-danger" @onclick="() => ConfirmDelete(student)">Delete</button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+
+        <ConfirmDialog Title="Confirm Deletion" Message="Are you sure you want to delete this student?"
+                       IsVisible="ShowConfirmDialog" OnConfirmed="HandleDelete" OnCancelled="CancelDelete" />
+    </div>
+</AuthGuard>
 
 @code {
     private List<Student>? allStudents;
     private string searchTerm = string.Empty;
     private bool showConfirmDialog = false;
     private Student? studentToDelete;
+    private string ErrorMessage = string.Empty;
 
     public string SearchTerm
     {
@@ -103,18 +111,13 @@
 
     protected override void OnInitialized()
     {
-        if (AuthStateService.CurrentUser?.Role != EduConnect.Models.Enums.UserRole.Admin)
-        {
-            NavigationManager.NavigateTo("/unauthorized");
-            return;
-        }
-
         allStudents = StudentService.GetAll();
     }
 
     private void ConfirmDelete(Student student)
     {
         studentToDelete = student;
+        ErrorMessage = string.Empty;
         showConfirmDialog = true;
         StateHasChanged();
     }
@@ -136,9 +139,17 @@
                 showConfirmDialog = false;
                 studentToDelete = null;
             }
-            catch (Exception)
+            catch (EduConnect.Models.Exceptions.StudentHasActiveEnrollmentsException ex)
             {
-                // Handle exception (log or show message)
+                showConfirmDialog = false;
+                studentToDelete = null;
+                ErrorMessage = ex.Message;
+            }
+            catch (Exception ex)
+            {
+                showConfirmDialog = false;
+                studentToDelete = null;
+                ErrorMessage = "An error occurred during deletion.";
             }
         }
     }

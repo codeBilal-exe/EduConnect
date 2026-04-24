@@ -1,6 +1,7 @@
 using EduConnect.Data;
 using EduConnect.Interfaces;
 using EduConnect.Models;
+using EduConnect.Models.Exceptions;
 
 namespace EduConnect.Services;
 
@@ -53,6 +54,11 @@ public class StudentService : IStudentService
         var student = GetById(id);
         if (student != null)
         {
+            var hasActiveEnrollments = _courseService.GetAll().Any(c => c.EnrolledStudentIds.Contains(id));
+            if (hasActiveEnrollments)
+            {
+                throw new StudentHasActiveEnrollmentsException(student.FullName);
+            }
             _students.Remove(student);
         }
     }

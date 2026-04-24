@@ -12,88 +12,90 @@
 @inject IAuthStateService AuthStateService
 @inject NavigationManager NavigationManager
 
-<div class="container-fluid mt-4">
-    <h2>My Assigned Courses</h2>
+<AuthGuard AllowedRoles="new[] { UserRole.Faculty }">
+    <div class="container-fluid mt-4">
+        <h2>My Assigned Courses</h2>
 
-    @if (assignedCourses == null)
-    {
-        <LoadingSpinner IsLoading="true" />
-    }
-    else if (assignedCourses.Count == 0)
-    {
-        <div class="alert alert-info">You have no assigned courses.</div>
-    }
-    else
-    {
-        <div class="row">
-            @foreach (var course in assignedCourses)
-            {
-                <div class="col-md-6 mb-4">
-                    <div class="card">
-                        <div class="card-header bg-primary text-white">
-                            <h5>@course.Code - @course.Title</h5>
-                        </div>
-                        <div class="card-body">
-                            <p><strong>Credit Hours:</strong> @course.CreditHours</p>
-                            <p><strong>Capacity:</strong> @course.EnrollmentCount / @course.MaxCapacity</p>
-                            <p><strong>Status:</strong> <span
-                                class="badge bg-@GetStatusColor(course.EnrollmentStatus)">@course.EnrollmentStatus</span>
-                            </p>
-                            <div class="progress mb-3">
-                                <div class="progress-bar" role="progressbar" style="width: @GetProgressPercentage(course)%;"
-                                     aria-valuenow="@course.EnrollmentCount" aria-valuemin="0"
-                                     aria-valuemax="@course.MaxCapacity">
+        @if (assignedCourses == null)
+        {
+            <LoadingSpinner IsLoading="true" />
+        }
+        else if (assignedCourses.Count == 0)
+        {
+            <div class="alert alert-info">You have no assigned courses.</div>
+        }
+        else
+        {
+            <div class="row">
+                @foreach (var course in assignedCourses)
+                {
+                    <div class="col-md-6 mb-4">
+                        <div class="card">
+                            <div class="card-header bg-primary text-white">
+                                <h5>@course.Code - @course.Title</h5>
+                            </div>
+                            <div class="card-body">
+                                <p><strong>Credit Hours:</strong> @course.CreditHours</p>
+                                <p><strong>Capacity:</strong> @course.EnrollmentCount / @course.MaxCapacity</p>
+                                <p><strong>Status:</strong> <span
+                                    class="badge bg-@GetStatusColor(course.EnrollmentStatus)">@course.EnrollmentStatus</span>
+                                </p>
+                                <div class="progress mb-3">
+                                    <div class="progress-bar" role="progressbar" style="width: @GetProgressPercentage(course)%;"
+                                         aria-valuenow="@course.EnrollmentCount" aria-valuemin="0"
+                                         aria-valuemax="@course.MaxCapacity">
+                                    </div>
+                                </div>
+                                <a href="/faculty/grades" class="btn btn-primary btn-sm">Enter Grades</a>
+                                <button class="btn btn-info btn-sm" @onclick="() => ViewEnrollments(course)">View Enrolled
+                                    Students</button>
                                 </div>
                             </div>
-                            <a href="/faculty/grades" class="btn btn-primary btn-sm">Enter Grades</a>
-                            <button class="btn btn-info btn-sm" @onclick="() => ViewEnrollments(course)">View Enrolled
-                                Students</button>
-                            </div>
+                        </div>
+                    }
+                </div>
+
+                @if (SelectedCourse != null && EnrolledStudents != null)
+                {
+                    <div class="card mt-4">
+                        <div class="card-header">
+                            <h5>Enrolled Students in @SelectedCourse.Title</h5>
+                        </div>
+                        <div class="card-body">
+                            @if (EnrolledStudents.Count == 0)
+                            {
+                                <p>No students enrolled in this course.</p>
+                            }
+                            else
+                            {
+                                <div class="table-responsive">
+                                    <table class="table table-striped">
+                                        <thead>
+                                            <tr>
+                                                <th>Student Name</th>
+                                                <th>Email</th>
+                                                <th>Semester</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach (var student in EnrolledStudents.OrderBy(s => s.FullName))
+                                            {
+                                                <tr>
+                                                    <td>@student.FullName</td>
+                                                    <td>@student.Email</td>
+                                                    <td>@student.Semester</td>
+                                                </tr>
+                                            }
+                                        </tbody>
+                                    </table>
+                                </div>
+                            }
                         </div>
                     </div>
                 }
-            </div>
-
-            @if (SelectedCourse != null && EnrolledStudents != null)
-            {
-                <div class="card mt-4">
-                    <div class="card-header">
-                        <h5>Enrolled Students in @SelectedCourse.Title</h5>
-                    </div>
-                    <div class="card-body">
-                        @if (EnrolledStudents.Count == 0)
-                        {
-                            <p>No students enrolled in this course.</p>
-                        }
-                        else
-                        {
-                            <div class="table-responsive">
-                                <table class="table table-striped">
-                                    <thead>
-                                        <tr>
-                                            <th>Student Name</th>
-                                            <th>Email</th>
-                                            <th>Semester</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        @foreach (var student in EnrolledStudents.OrderBy(s => s.FullName))
-                                        {
-                                            <tr>
-                                                <td>@student.FullName</td>
-                                                <td>@student.Email</td>
-                                                <td>@student.Semester</td>
-                                            </tr>
-                                        }
-                                    </tbody>
-                                </table>
-                            </div>
-                        }
-                    </div>
-                </div>
             }
-        }
-    </div>
+        </div>
+</AuthGuard>
 
 @code {
     private List<Course>? assignedCourses;
@@ -103,13 +105,10 @@
     protected override void OnInitialized()
     {
         var userId = AuthStateService.CurrentUser?.Id;
-        if (!userId.HasValue || AuthStateService.CurrentUser?.Role != UserRole.Faculty)
+        if (userId.HasValue)
         {
-            NavigationManager.NavigateTo("/unauthorized");
-            return;
+            assignedCourses = CourseService.GetCoursesByFaculty(userId.Value);
         }
-
-        assignedCourses = CourseService.GetCoursesByFaculty(userId.Value);
     }
 
     private void ViewEnrollments(Course course)

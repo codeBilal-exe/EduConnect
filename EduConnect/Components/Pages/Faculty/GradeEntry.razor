@@ -9,92 +9,93 @@
 @inject IAuthStateService AuthStateService
 @inject NavigationManager NavigationManager
 
-<div class="container mt-4">
-    <h2>Grade Entry</h2>
+@inject IStudentService StudentService
+@inject INotificationService NotificationService
 
-    @if (assignedCourses == null || assignedCourses.Count == 0)
-    {
-        <div class="alert alert-info">You have no assigned courses.</div>
-    }
-    else
-    {
-        <div class="mb-3">
-            <label class="form-label">Select Course</label>
-            <select class="form-control" @onchange="HandleCourseSelected">
-                <option value="">-- Select a Course --</option>
-                @foreach (var course in assignedCourses)
-                {
-                    <option value="@course.Id">@course.Code - @course.Title</option>
-                }
-            </select>
-        </div>
+<AuthGuard AllowedRoles="new[] { UserRole.Faculty }">
+    <div class="container mt-4">
+        <h2>Grade Entry</h2>
 
-        @if (selectedCourse != null)
+        @if (assignedCourses == null || assignedCourses.Count == 0)
         {
-            <div class="card">
-                <div class="card-body">
-                    <h5>Enter Grades for @selectedCourse.Title</h5>
-                    @if (enrolledStudents != null && enrolledStudents.Count > 0)
-                    {
-                        <form @onsubmit="SubmitGrades">
-                            <div class="table-responsive">
-                                <table class="table">
-                                    <thead>
-                                        <tr>
-                                            <th>Student Name</th>
-                                            <th>Email</th>
-                                            <th>Marks (0-100)</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        @foreach (var studentId in selectedCourse.EnrolledStudentIds)
-                                        {
-                                            var student = GetStudent(studentId);
-                                            if (student != null)
-                                            {
-                                                <tr>
-                                                    <td>@student.FullName</td>
-                                                    <td>@student.Email</td>
-                                                    <td>
-                                                        <input type="number" class="form-control" min="0" max="100"
-                                                               @onchange="@((ChangeEventArgs e) => UpdateMarks(studentId, e))" />
-                                                    </td>
-                                                </tr>
-                                            }
-                                        }
-                                    </tbody>
-                                </table>
-                            </div>
-                            <button type="submit" class="btn btn-primary">Submit Grades</button>
-                        </form>
-                    }
-                    else
-                    {
-                        <p>No enrolled students in this course.</p>
-                    }
-                </div>
-            </div>
+            <div class="alert alert-info">You have no assigned courses.</div>
         }
-    }
-</div>
+        else
+        {
+            <div class="mb-3">
+                <label class="form-label">Select Course</label>
+                <select class="form-control" @onchange="HandleCourseSelected">
+                    <option value="">-- Select a Course --</option>
+                    @foreach (var course in assignedCourses)
+                    {
+                        <option value="@course.Id">@course.Code - @course.Title</option>
+                    }
+                </select>
+            </div>
+
+            @if (selectedCourse != null)
+            {
+                <div class="card">
+                    <div class="card-body">
+                        <h5>Enter Grades for @selectedCourse.Title</h5>
+                        @if (selectedCourse.EnrolledStudentIds != null && selectedCourse.EnrolledStudentIds.Count > 0)
+                        {
+                            <form @onsubmit="SubmitGrades">
+                                <div class="table-responsive">
+                                    <table class="table">
+                                        <thead>
+                                            <tr>
+                                                <th>Student Name</th>
+                                                <th>Email</th>
+                                                <th>Marks (0-100)</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach (var studentId in selectedCourse.EnrolledStudentIds)
+                                            {
+                                                var student = GetStudent(studentId);
+                                                if (student != null)
+                                                {
+                                                    <tr>
+                                                        <td>@student.FullName</td>
+                                                        <td>@student.Email</td>
+                                                        <td>
+                                                            <input type="number" class="form-control" min="0" max="100"
+                                                                   @onchange="@((ChangeEventArgs e) => UpdateMarks(studentId, e))" />
+                                                        </td>
+                                                    </tr>
+                                                }
+                                            }
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <button type="submit" class="btn btn-primary">Submit Grades</button>
+                            </form>
+                        }
+                        else
+                        {
+                            <p>No enrolled students in this course.</p>
+                        }
+                    </div>
+                </div>
+            }
+        }
+    </div>
+</AuthGuard>
 
 @code {
     private List<Course>? assignedCourses;
     private Course? selectedCourse;
-    private List<Student>? enrolledStudents;
     private Dictionary<Guid, double> gradeMarks = new();
 
     protected override void OnInitialized()
     {
         var userId = AuthStateService.CurrentUser?.Id;
-        if (!userId.HasValue)
+        if (userId.HasValue)
         {
-            NavigationManager.NavigateTo("/login");
-            return;
+            // Get courses assigned to this faculty
+            assignedCourses = CourseService.GetCoursesByFaculty(userId.Value);
         }
-
-        // Get courses assigned to this faculty
-        assignedCourses = CourseService.GetCoursesByFaculty(userId.Value);
     }
 
     private void HandleCourseSelected(ChangeEventArgs e)
@@ -104,7 +105,6 @@
             selectedCourse = CourseService.GetById(courseId);
             if (selectedCourse != null)
             {
-                enrolledStudents = new List<Student>();
                 gradeMarks.Clear();
             }
         }
@@ -112,9 +112,7 @@
 
     private Student? GetStudent(Guid studentId)
     {
-        // This would normally be fetched from StudentService
-        // For now, returning null
-        return null;
+        return StudentService.GetById(studentId);
     }
 
     private void UpdateMarks(Guid studentId, ChangeEventArgs e)
@@ -141,6 +139,17 @@
             };
 
             GradeService.SubmitGrade(grade);
+
+            var notification = new Notification
+            {
+                Id = Guid.NewGuid(),
+                UserId = studentId,
+                Message = $"Grades have been posted for {selectedCourse.Title}.",
+                Type = NotificationType.GradePosted,
+                CreatedAt = DateTime.Now,
+                IsRead = false
+            };
+            NotificationService.SendNotification(notification);
         }
 
         // Clear form

@@ -12,102 +12,104 @@
 @inject IAuthStateService AuthStateService
 @inject NavigationManager NavigationManager
 
-<div class="container-fluid mt-4">
-    <h2>Grade Report - All Students</h2>
+<AuthGuard AllowedRoles="new[] { UserRole.Admin }">
+    <div class="container-fluid mt-4">
+        <h2>Grade Report - All Students</h2>
 
-    @if (students == null)
-    {
-        <p>Loading...</p>
-    }
-    else if (students.Count == 0)
-    {
-        <div class="alert alert-info">No students found.</div>
-    }
-    else
-    {
-        <div class="row mb-4">
-            <div class="col-md-3">
-                <div class="card text-center">
-                    <div class="card-body">
-                        <h5 class="card-title">Total Students</h5>
-                        <p class="display-4">@students.Count</p>
+        @if (students == null)
+        {
+            <p>Loading...</p>
+        }
+        else if (students.Count == 0)
+        {
+            <div class="alert alert-info">No students found.</div>
+        }
+        else
+        {
+            <div class="row mb-4">
+                <div class="col-md-3">
+                    <div class="card text-center">
+                        <div class="card-body">
+                            <h5 class="card-title">Total Students</h5>
+                            <p class="display-4">@students.Count</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card text-center">
+                        <div class="card-body">
+                            <h5 class="card-title">Average CGPA</h5>
+                            <p class="display-4">@averageCGPA.ToString("F2")</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card text-center bg-success text-white">
+                        <div class="card-body">
+                            <h5 class="card-title">Excellent (A/B)</h5>
+                            <p class="display-4">@excellentCount</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card text-center bg-danger text-white">
+                        <div class="card-body">
+                            <h5 class="card-title">Fail (F)</h5>
+                            <p class="display-4">@failCount</p>
+                        </div>
                     </div>
                 </div>
             </div>
-            <div class="col-md-3">
-                <div class="card text-center">
-                    <div class="card-body">
-                        <h5 class="card-title">Average CGPA</h5>
-                        <p class="display-4">@averageCGPA.ToString("F2")</p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="card text-center bg-success text-white">
-                    <div class="card-body">
-                        <h5 class="card-title">Excellent (A/B)</h5>
-                        <p class="display-4">@excellentCount</p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="card text-center bg-danger text-white">
-                    <div class="card-body">
-                        <h5 class="card-title">Fail (F)</h5>
-                        <p class="display-4">@failCount</p>
-                    </div>
-                </div>
-            </div>
-        </div>
 
-        <div class="card">
-            <div class="card-header">
-                <h5>Student Grade Summary (Sorted by CGPA - Descending)</h5>
-            </div>
-            <div class="card-body">
-                <div class="table-responsive">
-                    <table class="table table-striped table-hover">
-                        <thead>
-                            <tr>
-                                <th>Student Name</th>
-                                <th>Semester</th>
-                                <th>CGPA</th>
-                                <th>Grade Categories</th>
-                                <th>Action</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach (var student in studentCGPAs.OrderByDescending(s => s.CGPA))
-                            {
-                                var cgpaColor = student.CGPA >= 3.5 ? "success" : student.CGPA >= 2.0 ? "warning" : "danger";
+            <div class="card">
+                <div class="card-header">
+                    <h5>Student Grade Summary (Sorted by CGPA - Descending)</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover">
+                            <thead>
                                 <tr>
-                                    <td>@student.Student.FullName</td>
-                                    <td>@student.Student.Semester</td>
-                                    <td><span class="badge bg-@cgpaColor">@student.CGPA.ToString("F2")</span></td>
-                                    <td>
-                                        @{
-                                            var grades = GradeService.GetGradesForStudent(student.Student.Id);
-                                            var aCount = grades.Count(g => g.LetterGrade == "A");
-                                            var bCount = grades.Count(g => g.LetterGrade == "B");
-                                            var cCount = grades.Count(g => g.LetterGrade == "C");
-                                            var dCount = grades.Count(g => g.LetterGrade == "D");
-                                            var fCount = grades.Count(g => g.LetterGrade == "F");
-                                        }
-                                        A: @aCount, B: @bCount, C: @cCount, D: @dCount, F: @fCount
-                                    </td>
-                                    <td>
-                                        <a href="@($"/admin/students/{student.Student.Id}")"
-                                           class="btn btn-sm btn-info">View</a>
-                                    </td>
+                                    <th>Student Name</th>
+                                    <th>Semester</th>
+                                    <th>CGPA</th>
+                                    <th>Grade Categories</th>
+                                    <th>Action</th>
                                 </tr>
-                            }
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody>
+                                @foreach (var student in studentCGPAs.OrderByDescending(s => s.CGPA))
+                                {
+                                    var cgpaColor = student.CGPA >= 3.5 ? "success" : student.CGPA >= 2.0 ? "warning" : "danger";
+                                    <tr>
+                                        <td>@student.Student.FullName</td>
+                                        <td>@student.Student.Semester</td>
+                                        <td><span class="badge bg-@cgpaColor">@student.CGPA.ToString("F2")</span></td>
+                                        <td>
+                                            @{
+                                                var grades = GradeService.GetGradesForStudent(student.Student.Id);
+                                                var aCount = grades.Count(g => g.LetterGrade == "A");
+                                                var bCount = grades.Count(g => g.LetterGrade == "B");
+                                                var cCount = grades.Count(g => g.LetterGrade == "C");
+                                                var dCount = grades.Count(g => g.LetterGrade == "D");
+                                                var fCount = grades.Count(g => g.LetterGrade == "F");
+                                            }
+                                            A: @aCount, B: @bCount, C: @cCount, D: @dCount, F: @fCount
+                                        </td>
+                                        <td>
+                                            <a href="@($"/admin/students/{student.Student.Id}")"
+                                               class="btn btn-sm btn-info">View</a>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
-        </div>
-    }
-</div>
+        }
+    </div>
+</AuthGuard>
 
 @code {
     private List<Student>? students;
@@ -118,12 +120,6 @@
 
     protected override void OnInitialized()
     {
-        if (AuthStateService.CurrentUser?.Role != UserRole.Admin)
-        {
-            NavigationManager.NavigateTo("/unauthorized");
-            return;
-        }
-
         students = StudentService.GetAll();
 
         // Compute CGPA for all students

@@ -11,62 +11,64 @@
 @inject IAuthStateService AuthStateService
 @inject NavigationManager NavigationManager
 
-<div class="container mt-4">
-    <h2>Edit Student</h2>
+<AuthGuard AllowedRoles="new[] { UserRole.Admin }">
+    <div class="container mt-4">
+        <h2>Edit Student</h2>
 
-    @if (!string.IsNullOrEmpty(ErrorMessage))
-    {
-        <div class="alert alert-danger">@ErrorMessage</div>
-    }
+        @if (!string.IsNullOrEmpty(ErrorMessage))
+        {
+            <div class="alert alert-danger">@ErrorMessage</div>
+        }
 
-    @if (Student != null)
-    {
-        <div class="card">
-            <div class="card-body">
-                <form @onsubmit="HandleSubmit">
-                    <div class="mb-3">
-                        <label class="form-label">Full Name</label>
-                        <input type="text" class="form-control" @bind="Student.FullName" />
-                        @if (ValidationErrors.Contains("name"))
-                        {
-                            <small class="text-danger">Full name is required.</small>
-                        }
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label">Email</label>
-                        <input type="email" class="form-control" @bind="Student.Email" />
-                        @if (ValidationErrors.Contains("email"))
-                        {
-                            <small class="text-danger">Email is required and must be valid.</small>
-                        }
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label">Semester</label>
-                        <select class="form-control" @bind="Student.Semester">
-                            @for (int i = 1; i <= 8; i++)
+        @if (Student != null)
+        {
+            <div class="card">
+                <div class="card-body">
+                    <form @onsubmit="HandleSubmit">
+                        <div class="mb-3">
+                            <label class="form-label">Full Name</label>
+                            <input type="text" class="form-control" @bind="Student.FullName" />
+                            @if (ValidationErrors.Contains("name"))
                             {
-                                <option value="@i">@i</option>
+                                <small class="text-danger">Full name is required.</small>
                             }
-                        </select>
-                        @if (ValidationErrors.Contains("semester"))
-                        {
-                            <small class="text-danger">Semester must be between 1 and 8.</small>
-                        }
-                    </div>
+                        </div>
 
-                    <button type="submit" class="btn btn-primary">Update Student</button>
-                    <a href="/admin/students" class="btn btn-secondary">Cancel</a>
-                </form>
+                        <div class="mb-3">
+                            <label class="form-label">Email</label>
+                            <input type="email" class="form-control" @bind="Student.Email" />
+                            @if (ValidationErrors.Contains("email"))
+                            {
+                                <small class="text-danger">Email is required and must be valid.</small>
+                            }
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Semester</label>
+                            <select class="form-control" @bind="Student.Semester">
+                                @for (int i = 1; i <= 8; i++)
+                                {
+                                    <option value="@i">@i</option>
+                                }
+                            </select>
+                            @if (ValidationErrors.Contains("semester"))
+                            {
+                                <small class="text-danger">Semester must be between 1 and 8.</small>
+                            }
+                        </div>
+
+                        <button type="submit" class="btn btn-primary">Update Student</button>
+                        <a href="/admin/students" class="btn btn-secondary">Cancel</a>
+                    </form>
+                </div>
             </div>
-        </div>
-    }
-    else
-    {
-        <div class="alert alert-warning">Student not found.</div>
-    }
-</div>
+        }
+        else
+        {
+            <div class="alert alert-warning">Student not found.</div>
+        }
+    </div>
+</AuthGuard>
 
 @code {
     [Parameter]
@@ -78,12 +80,6 @@
 
     protected override void OnInitialized()
     {
-        if (AuthStateService.CurrentUser?.Role != UserRole.Admin)
-        {
-            NavigationManager.NavigateTo("/unauthorized");
-            return;
-        }
-
         Student = StudentService.GetById(Id);
         if (Student == null)
         {
