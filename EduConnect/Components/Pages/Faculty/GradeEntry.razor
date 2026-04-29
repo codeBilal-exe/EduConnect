@@ -61,7 +61,7 @@
                                                         <td>@student.Email</td>
                                                         <td>
                                                             <input type="number" class="form-control" min="0" max="100"
-                                                                   @onchange="@((ChangeEventArgs e) => UpdateMarks(studentId, e))" />
+                                                                   @bind="gradeMarks[studentId]" @bind:after="StateHasChanged" />
                                                         </td>
                                                     </tr>
                                                 }
@@ -113,14 +113,6 @@
     private Student? GetStudent(Guid studentId)
     {
         return StudentService.GetById(studentId);
-    }
-
-    private void UpdateMarks(Guid studentId, ChangeEventArgs e)
-    {
-        if (double.TryParse(e.Value?.ToString(), out var marks))
-        {
-            gradeMarks[studentId] = marks;
-        }
     }
 
     private void SubmitGrades()

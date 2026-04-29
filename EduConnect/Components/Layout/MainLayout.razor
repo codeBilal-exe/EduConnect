@@ -1,23 +1,33 @@
 @inherits LayoutComponentBase
 @using EduConnect.Components.Auth
+@using EduConnect.Interfaces
 
-<div class="d-flex flex-column min-vh-100 bg-light">
-    <NavBar />
+<!-- DIP: CascadingValue provides AuthState to all child components without explicit injection -->
+<CascadingValue Value="AuthState">
+    <div class="d-flex flex-column min-vh-100 bg-light">
+        <NavBar />
 
-    <main class="flex-grow-1 container-fluid mt-4 mb-5 pb-5">
-        @Body
-    </main>
+        <main class="flex-grow-1 container-fluid mt-4 mb-5 pb-5">
+            @Body
+        </main>
 
-    <footer class="mt-auto py-4 text-center text-white" style="background-color: var(--brand-navy); border-top: 4px solid var(--brand-gold);">
-        <div class="container">
-            <h5 class="fw-bold mb-1" style="letter-spacing: 2px;">CONNECT &bull; LEARN &bull; SUCCEED</h5>
-            <small class="text-white-50">UNIVERSITY ACADEMIC PORTAL &copy; @DateTime.Now.Year</small>
-        </div>
-    </footer>
-</div>
+        <footer class="mt-auto py-4 text-center text-white"
+                style="background-color: var(--brand-navy); border-top: 4px solid var(--brand-gold);">
+            <div class="container">
+                <h5 class="fw-bold mb-1" style="letter-spacing: 2px;">CONNECT &bull; LEARN &bull; SUCCEED</h5>
+                <small class="text-white-50">UNIVERSITY ACADEMIC PORTAL &copy; @DateTime.Now.Year</small>
+            </div>
+        </footer>
+    </div>
+</CascadingValue>
 
 <div id="blazor-error-ui">
     An unhandled error has occurred.
     <a href="" class="reload">Reload</a>
     <a class="dismiss">🗙</a>
 </div>
+
+@code {
+    [Inject]
+    private IAuthStateService? AuthState { get; set; }
+}

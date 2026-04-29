@@ -4,10 +4,12 @@
 
 @implements IDisposable
 
-<nav class="navbar navbar-expand-lg navbar-dark sticky-top shadow-sm" style="background-color: var(--brand-navy); border-bottom: 3px solid var(--brand-gold);">
+<nav class="navbar navbar-expand-lg navbar-dark sticky-top shadow-sm"
+     style="background-color: var(--brand-navy); border-bottom: 3px solid var(--brand-gold);">
     <div class="container-fluid px-4">
         <a class="navbar-brand d-flex align-items-center" href="/">
-            <img src="favicon.png" alt="EduConnect Logo" width="40" height="40" class="me-2 rounded-circle bg-white p-1">
+            <img src="favicon.png" alt="EduConnect Logo" width="40" height="40"
+                 class="me-2 rounded-circle bg-white p-1">
             <span class="fw-bold">EduConnect</span>
         </a>
         <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
@@ -53,10 +55,18 @@
                     @if (CurrentUser.Role == UserRole.Student)
                     {
                         <li class="nav-item">
-                            <a class="nav-link" href="/courses">Catalog</a>
+                            <a class="nav-link position-relative" href="/student/enroll">
+                                Enroll
+                                @if (EnrolledCredits > 0)
+                                {
+                                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-info">
+                                        @EnrolledCredits cr
+                                    </span>
+                                }
+                            </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="/student/enroll">Enroll</a>
+                            <a class="nav-link" href="/courses">Catalog</a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link" href="/student/grades">My Grades</a>
@@ -89,9 +99,13 @@
     private IAuthStateService? AuthStateService { get; set; }
 
     [Inject]
+    private ICourseService? CourseService { get; set; }
+
+    [Inject]
     private NavigationManager? NavigationManager { get; set; }
 
     private Person? CurrentUser => AuthStateService?.CurrentUser;
+    private int EnrolledCredits => ComputeEnrolledCredits();
 
     protected override void OnInitialized()
     {
@@ -99,9 +113,32 @@
         {
             AuthStateService.OnAuthStateChanged += StateChanged;
         }
+
+        if (CourseService != null)
+        {
+            CourseService.OnEnrollmentChanged += OnEnrollmentChanged;
+        }
+    }
+
+    private int ComputeEnrolledCredits()
+    {
+        if (CurrentUser?.Role != UserRole.Student || CourseService == null)
+            return 0;
+
+        var allCourses = CourseService.GetAll();
+        var enrolledCredits = allCourses
+            .Where(c => c.EnrolledStudentIds.Contains(CurrentUser.Id))
+            .Sum(c => c.CreditHours);
+
+        return enrolledCredits;
     }
 
     private void StateChanged()
+    {
+        StateHasChanged();
+    }
+
+    private void OnEnrollmentChanged()
     {
         StateHasChanged();
     }
@@ -117,6 +154,11 @@
         if (AuthStateService != null)
         {
             AuthStateService.OnAuthStateChanged -= StateChanged;
+        }
+
+        if (CourseService != null)
+        {
+            CourseService.OnEnrollmentChanged -= OnEnrollmentChanged;
         }
     }
 }

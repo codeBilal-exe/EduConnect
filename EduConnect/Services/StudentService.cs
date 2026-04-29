@@ -13,6 +13,8 @@ public class StudentService : IStudentService
     private readonly IGradeService _gradeService;
     private readonly ICourseService _courseService;
 
+    public event Action? OnStudentUpdated;
+
     public StudentService(IGradeService gradeService, ICourseService courseService)
     {
         _gradeService = gradeService;
@@ -46,6 +48,7 @@ public class StudentService : IStudentService
             existing.FullName = entity.FullName;
             existing.Email = entity.Email;
             existing.Semester = entity.Semester;
+            OnStudentUpdated?.Invoke();
         }
     }
 

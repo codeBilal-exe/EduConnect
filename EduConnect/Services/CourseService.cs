@@ -89,6 +89,14 @@ public class CourseService : ICourseService
         if (course.EnrolledStudentIds.Contains(studentId))
             throw new InvalidOperationException("Student is already enrolled in this course.");
 
+        // OCP: Re-enrollment check prevents duplicates in same semester (service layer validation)
+        var existingEnrollment = _enrollments.FirstOrDefault(e =>
+            e.StudentId == studentId &&
+            e.CourseId == courseId &&
+            e.State == EnrollmentState.Active);
+        if (existingEnrollment != null)
+            throw new InvalidOperationException("Student is already enrolled in this course in the current semester.");
+
         course.EnrolledStudentIds.Add(studentId);
 
         var enrollment = new Enrollment
