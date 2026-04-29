@@ -26,8 +26,9 @@ public class AuthStateService : IAuthStateService
 
     public AuthStateService()
     {
-        _users = new List<Person>(SeedData.Users);
+        _users = SeedData.Users;
     }
+
 
     public bool Login(string email, string password)
     {

@@ -267,8 +267,6 @@ Then open **`https://localhost:7000`** (or the URL shown in terminal) in your br
 
 ## 📐 SOLID Principles
 
-Overall compliance score: **97%** ✅
-
 | Principle | Score | Implementation |
 |---|---|---|
 | **S**ingle Responsibility | 93% | Each service class has one primary responsibility |
@@ -276,8 +274,6 @@ Overall compliance score: **97%** ✅
 | **L**iskov Substitution | 100% | `Student`, `Faculty`, `Admin` all substitute `Person` cleanly |
 | **I**nterface Segregation | 93% | Focused per-service interfaces, no fat interfaces |
 | **D**ependency Inversion | 100% | All components depend on `IXxxService`, never concrete classes |
-
-See [`SOLID_COMPLIANCE_CHECKLIST.md`](./SOLID_COMPLIANCE_CHECKLIST.md) for detailed analysis and [`SOLID_ANNOTATIONS_GUIDE.md`](./SOLID_ANNOTATIONS_GUIDE.md) for annotated code examples.
 
 ---
 

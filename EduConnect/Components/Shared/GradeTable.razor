@@ -1,6 +1,8 @@
 @using EduConnect.Models
 @namespace EduConnect.Components.Shared
 
+@inject ICourseService CourseService
+
 @if (GradeRecords != null && GradeRecords.Count > 0)
 {
     <div class="table-responsive">
@@ -16,8 +18,19 @@
             <tbody>
                 @foreach (var grade in GradeRecords)
                 {
+                    var course = CourseService.GetById(grade.CourseId);
                     <tr class="@GetRowClass(grade.LetterGrade)">
-                        <td>@grade.CourseId</td>
+                        <td>
+                            @if (course != null)
+                            {
+                                <strong>@course.Code</strong><br />
+                                <small class="text-muted">@course.Title</small>
+                            }
+                            else
+                            {
+                                @grade.CourseId
+                            }
+                        </td>
                         <td>@grade.Marks</td>
                         <td><strong>@grade.LetterGrade</strong></td>
                         <td>@grade.GradePoint.ToString("F2")</td>

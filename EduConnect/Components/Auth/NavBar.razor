@@ -15,11 +15,22 @@
             <span class="fw-bold fs-5 lh-1">EduConnect</span>
         </a>
 
-        @* Toggler (mobile) *@
-        <button class="navbar-toggler border-0 p-1" type="button" @onclick="ToggleMenu"
-                aria-label="Toggle navigation" aria-expanded="@IsMenuOpen">
-            <span class="navbar-toggler-icon"></span>
-        </button>
+        @* Right-side Actions (Bell + Toggler) *@
+        <div class="d-flex align-items-center gap-2 ms-auto order-lg-last">
+            @if (CurrentUser != null)
+            {
+                @* Mobile/Tablet Bell (hidden on lg) *@
+                <div class="d-lg-none">
+                    <EduConnect.Components.Shared.NotificationBell />
+                </div>
+            }
+
+            @* Toggler (mobile only) *@
+            <button class="navbar-toggler border-0 p-1 ms-2" type="button" @onclick="ToggleMenu"
+                    aria-label="Toggle navigation" aria-expanded="@IsMenuOpen">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+        </div>
 
         @* Collapsible content *@
         <div class="@($"collapse navbar-collapse {(IsMenuOpen ? "show" : "")}")">
@@ -28,6 +39,7 @@
             {
                 @* Nav links *@
                 <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                    @* ... (rest of nav links) ... *@
                     @if (CurrentUser.Role == UserRole.Admin)
                     {
                         <li class="nav-item">
@@ -81,8 +93,15 @@
                 <hr class="d-lg-none border-secondary my-2" />
 
                 @* User info + logout *@
-                <div class="d-flex flex-column flex-lg-row align-items-start align-items-lg-center gap-2 pb-2 pb-lg-0">
+                <div class="d-flex flex-column flex-lg-row align-items-start align-items-lg-center gap-3 pb-2 pb-lg-0 ms-lg-3">
+                    
+                    @* Desktop Bell (hidden on mobile) *@
+                    <div class="d-none d-lg-block me-2">
+                        <EduConnect.Components.Shared.NotificationBell />
+                    </div>
+
                     <div class="d-flex align-items-center gap-2">
+
                         <div class="bg-white bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center fw-bold text-white"
                              style="width:34px; height:34px; font-size:0.8rem;">
                             @GetInitials(CurrentUser.FullName)
@@ -97,6 +116,8 @@
                     </button>
                 </div>
             }
+
+
             else
             {
                 <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
@@ -162,8 +183,9 @@
         StateHasChanged();
     }
 
-    private void StateChanged() => StateHasChanged();
-    private void OnEnrollmentChanged() => StateHasChanged();
+    private void StateChanged() => InvokeAsync(StateHasChanged);
+    private void OnEnrollmentChanged() => InvokeAsync(StateHasChanged);
+
 
     private void HandleLogout()
     {

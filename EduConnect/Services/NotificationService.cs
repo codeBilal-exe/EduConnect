@@ -15,8 +15,9 @@ public class NotificationService : INotificationService
 
     public NotificationService()
     {
-        _notifications = new List<Notification>(SeedData.Notifications);
+        _notifications = SeedData.Notifications;
     }
+
 
     // SRP: Sending notifications is a core responsibility
     public void SendNotification(Notification notification)

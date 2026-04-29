@@ -9,7 +9,7 @@ namespace EduConnect.Services;
 // DIP: Implements IStudentService abstraction
 public class StudentService : IStudentService
 {
-    private readonly List<Student> _students;
+    private readonly List<Person> _users;
     private readonly IGradeService _gradeService;
     private readonly ICourseService _courseService;
 
@@ -19,8 +19,10 @@ public class StudentService : IStudentService
     {
         _gradeService = gradeService;
         _courseService = courseService;
-        _students = new List<Student>(SeedData.Users.OfType<Student>());
+        _users = SeedData.Users;
     }
+
+    private IEnumerable<Student> _students => _users.OfType<Student>();
 
     public Student? GetById(Guid id)
     {
@@ -29,14 +31,15 @@ public class StudentService : IStudentService
 
     public List<Student> GetAll()
     {
-        return new List<Student>(_students);
+        return _students.ToList();
     }
+
 
     public void Add(Student entity)
     {
-        if (!_students.Any(s => s.Id == entity.Id))
+        if (!_users.Any(s => s.Id == entity.Id))
         {
-            _students.Add(entity);
+            _users.Add(entity);
         }
     }
 
@@ -62,9 +65,10 @@ public class StudentService : IStudentService
             {
                 throw new StudentHasActiveEnrollmentsException(student.FullName);
             }
-            _students.Remove(student);
+            _users.Remove(student);
         }
     }
+
 
     // ISP: Search is a specialized operation for students
     public List<Student> Search(string term)

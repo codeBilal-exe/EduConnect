@@ -132,7 +132,7 @@
 
             CourseService.EnrollStudent(course.Id, studentId.Value);
             SuccessMessage = $"Successfully enrolled in {course.Title}!";
-            
+
             // Send Notification
             var notification = new Notification
             {

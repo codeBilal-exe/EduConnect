@@ -12,14 +12,18 @@ public class CourseService : ICourseService
 {
     private readonly List<Course> _courses;
     private readonly List<Enrollment> _enrollments;
+    private readonly INotificationService _notificationService;
 
     public event Action? OnEnrollmentChanged;
 
-    public CourseService()
+    public CourseService(INotificationService notificationService)
     {
-        _courses = new List<Course>(SeedData.Courses);
-        _enrollments = new List<Enrollment>(SeedData.Enrollments);
+        _notificationService = notificationService;
+        _courses = SeedData.Courses;
+        _enrollments = SeedData.Enrollments;
     }
+
+
 
     public Course? GetById(Guid id)
     {
@@ -110,6 +114,18 @@ public class CourseService : ICourseService
         };
 
         _enrollments.Add(enrollment);
+
+        // Send notification
+        _notificationService.SendNotification(new Notification
+        {
+            Id = Guid.NewGuid(),
+            UserId = studentId,
+            Message = $"You have successfully enrolled in {course.Code}: {course.Title}.",
+            Type = NotificationType.Enrollment,
+            CreatedAt = DateTime.Now,
+            IsRead = false
+        });
+
         OnEnrollmentChanged?.Invoke();
     }
 
@@ -129,6 +145,18 @@ public class CourseService : ICourseService
 
         enrollment.State = EnrollmentState.Dropped;
         course.EnrolledStudentIds.Remove(studentId);
+
+        // Send notification
+        _notificationService.SendNotification(new Notification
+        {
+            Id = Guid.NewGuid(),
+            UserId = studentId,
+            Message = $"You have dropped the course {course.Code}: {course.Title}.",
+            Type = NotificationType.Enrollment,
+            CreatedAt = DateTime.Now,
+            IsRead = false
+        });
+
         OnEnrollmentChanged?.Invoke();
     }
 }

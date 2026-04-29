@@ -10,11 +10,15 @@ builder.Services.AddRazorComponents()
 
 // DIP: Register services as interfaces to enable dependency inversion
 // SRP: Each service has a single responsibility and is registered separately
+// builder.Services.AddScoped<IAuthStateService, AuthStateService>();
 builder.Services.AddScoped<IAuthStateService, AuthStateService>();
-builder.Services.AddScoped<IStudentService, StudentService>();
-builder.Services.AddScoped<ICourseService, CourseService>();
-builder.Services.AddScoped<IGradeService, GradeService>();
-builder.Services.AddScoped<INotificationService, NotificationService>();
+
+// Data-carrying services are now Singletons to share state across all users in this in-memory demo
+builder.Services.AddSingleton<IStudentService, StudentService>();
+builder.Services.AddSingleton<ICourseService, CourseService>();
+builder.Services.AddSingleton<IGradeService, GradeService>();
+builder.Services.AddSingleton<INotificationService, NotificationService>();
+
 
 var app = builder.Build();
 

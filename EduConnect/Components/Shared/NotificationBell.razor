@@ -5,40 +5,60 @@
 @implements IAsyncDisposable
 
 <div class="btn-group" role="group">
-    <button type="button" class="btn btn-outline-primary position-relative" @onclick="ToggleDropdown">
-        🔔
+    <button type="button" class="btn btn-link text-white p-0 position-relative shadow-none" @onclick="ToggleDropdown" style="text-decoration: none;">
+        <i class="bi bi-bell-fill fs-5"></i>
         @if (UnreadCount > 0)
         {
-            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger border border-2 border-navy" style="font-size: 0.65rem; padding: 0.25em 0.5em;">
                 @UnreadCount
-                <span class="visually-hidden">unread notifications</span>
             </span>
         }
     </button>
     @if (ShowDropdown)
     {
-        <div class="dropdown-menu show p-3" style="min-width: 300px;">
-            @if (RecentNotifications.Count > 0)
-            {
-                <div style="max-height: 400px; overflow-y: auto;">
-                    @foreach (var notif in RecentNotifications)
+        <div class="dropdown-menu dropdown-menu-end show p-0 shadow border-0 mt-2" style="min-width: 320px; right: 0; left: auto;">
+            <div class="card border-0">
+                <div class="card-header bg-white border-bottom py-3 px-3 d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0 fw-bold text-dark">Notifications</h6>
+                    <a href="/notifications" class="badge bg-primary-subtle text-primary text-decoration-none px-2 py-1" @onclick="ToggleDropdown">View All</a>
+                </div>
+
+                <div class="list-group list-group-flush" style="max-height: 380px; overflow-y: auto;">
+                    @if (RecentNotifications != null && RecentNotifications.Count > 0)
                     {
-                        <div class="card mb-2">
-                            <div class="card-body p-2">
-                                <p class="card-text small">@notif.Message</p>
-                                <small class="text-muted">@notif.CreatedAt.ToString("g")</small>
+                        @foreach (var notif in RecentNotifications)
+                        {
+                            <div class="list-group-item list-group-item-action border-0 border-bottom px-3 py-3 @(notif.IsRead ? "opacity-75" : "bg-light-subtle")">
+                                <div class="d-flex w-100 justify-content-between align-items-start mb-1">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <div class="rounded-circle bg-@GetNotifColor(notif.Type) p-1" style="width: 8px; height: 8px;"></div>
+                                        <span class="fw-bold small text-dark">@GetNotifTitle(notif.Type)</span>
+                                    </div>
+                                    <small class="text-muted" style="font-size: 0.7rem;">@GetTimeAgo(notif.CreatedAt)</small>
+                                </div>
+                                <p class="mb-0 small text-secondary" style="font-size: 0.825rem; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
+                                    @notif.Message
+                                </p>
                             </div>
+                        }
+                    }
+                    else
+                    {
+                        <div class="p-5 text-center">
+                            <div class="bg-light rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 60px; height: 60px;">
+                                <i class="bi bi-bell-slash text-muted fs-3"></i>
+                            </div>
+                            <h6 class="text-dark fw-bold small">All caught up!</h6>
+                            <p class="text-muted mb-0" style="font-size: 0.75rem;">No new notifications to show right now.</p>
                         </div>
                     }
                 </div>
-            }
-            else
-            {
-                <p class="text-muted small">No notifications</p>
-            }
+            </div>
         </div>
     }
 </div>
+
+
 
 @code {
     [Inject]
@@ -60,15 +80,20 @@
         }
     }
 
-    private void OnNotificationReceived(Notification notification)
+    private async void OnNotificationReceived(Notification notification)
     {
-        var currentUserId = AuthStateService?.CurrentUser?.Id;
-        if (currentUserId.HasValue && notification.UserId == currentUserId.Value)
+        await InvokeAsync(() =>
         {
-            LoadNotifications();
-            StateHasChanged();
-        }
+            var currentUserId = AuthStateService?.CurrentUser?.Id;
+            if (currentUserId.HasValue && notification.UserId == currentUserId.Value)
+            {
+                LoadNotifications();
+                StateHasChanged();
+            }
+        });
     }
+
+
 
     private void ToggleDropdown()
     {
@@ -90,6 +115,31 @@
         }
     }
 
+    private string GetNotifColor(NotificationType type) => type switch
+    {
+        NotificationType.Announcement => "danger",
+        NotificationType.Enrollment => "info",
+        NotificationType.GradePosted => "success",
+        _ => "primary"
+    };
+
+    private string GetNotifTitle(NotificationType type) => type switch
+    {
+        NotificationType.Announcement => "Announcement",
+        NotificationType.Enrollment => "Course Update",
+        NotificationType.GradePosted => "Grade Posted",
+        _ => "Notification"
+    };
+
+    private string GetTimeAgo(DateTime dateTime)
+    {
+        var diff = DateTime.Now - dateTime;
+        if (diff.TotalDays >= 1) return $"{(int)diff.TotalDays}d ago";
+        if (diff.TotalHours >= 1) return $"{(int)diff.TotalHours}h ago";
+        if (diff.TotalMinutes >= 1) return $"{(int)diff.TotalMinutes}m ago";
+        return "Just now";
+    }
+
     ValueTask IAsyncDisposable.DisposeAsync()
     {
         if (NotificationService != null)
@@ -99,3 +149,4 @@
         return ValueTask.CompletedTask;
     }
 }
+

@@ -1,4 +1,6 @@
 @page "/faculty/courses"
+@rendermode InteractiveServer
+
 
 <PageTitle>EduConnect - Faculty Courses</PageTitle>
 
@@ -9,8 +11,10 @@
 @namespace EduConnect.Components.Pages.Faculty
 
 @inject ICourseService CourseService
+@inject IStudentService StudentService
 @inject IAuthStateService AuthStateService
 @inject NavigationManager NavigationManager
+
 
 <AuthGuard AllowedRoles="new[] { UserRole.Faculty }">
     <div class="container-fluid mt-4">
@@ -55,35 +59,51 @@
                     }
                 </div>
 
-                @if (SelectedCourse != null && EnrolledStudents != null)
+                @if (SelectedCourse != null)
                 {
-                    <div class="card mt-4">
-                        <div class="card-header">
-                            <h5>Enrolled Students in @SelectedCourse.Title</h5>
+                    <div class="card mt-4 border-info shadow-sm">
+                        <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">Enrolled Students: @SelectedCourse.Title</h5>
+                            <button class="btn btn-sm btn-light" @onclick="() => SelectedCourse = null">Close</button>
                         </div>
                         <div class="card-body">
-                            @if (EnrolledStudents.Count == 0)
+                            @if (EnrolledStudents == null)
                             {
-                                <p>No students enrolled in this course.</p>
+                                <div class="text-center py-4">
+                                    <div class="spinner-border text-info" role="status">
+                                        <span class="visually-hidden">Loading...</span>
+                                    </div>
+                                </div>
+                            }
+                            else if (EnrolledStudents.Count == 0)
+                            {
+                                <div class="text-center py-4">
+                                    <i class="bi bi-people text-muted fs-1"></i>
+                                    <p class="text-muted mt-2">No students are currently enrolled in this course.</p>
+                                </div>
                             }
                             else
                             {
                                 <div class="table-responsive">
-                                    <table class="table table-striped">
-                                        <thead>
+                                    <table class="table table-hover align-middle">
+                                        <thead class="table-light">
                                             <tr>
                                                 <th>Student Name</th>
-                                                <th>Email</th>
-                                                <th>Semester</th>
+                                                <th>Email Address</th>
+                                                <th class="text-center">Semester</th>
                                             </tr>
                                         </thead>
                                         <tbody>
                                             @foreach (var student in EnrolledStudents.OrderBy(s => s.FullName))
                                             {
                                                 <tr>
-                                                    <td>@student.FullName</td>
+                                                    <td>
+                                                        <div class="fw-bold">@student.FullName</div>
+                                                    </td>
                                                     <td>@student.Email</td>
-                                                    <td>@student.Semester</td>
+                                                    <td class="text-center">
+                                                        <span class="badge bg-secondary">Semester @student.Semester</span>
+                                                    </td>
                                                 </tr>
                                             }
                                         </tbody>
@@ -111,13 +131,32 @@
         }
     }
 
-    private void ViewEnrollments(Course course)
+    private async Task ViewEnrollments(Course course)
     {
         SelectedCourse = course;
-        // In a real implementation, fetch students from a StudentService
-        // For now, this is a placeholder
-        EnrolledStudents = new List<Student>();
+        EnrolledStudents = null; // Show spinner
+        StateHasChanged();
+
+        await Task.Delay(100); // Small delay to ensure spinner is visible and UI is responsive
+
+        if (course.EnrolledStudentIds != null)
+        {
+            EnrolledStudents = course.EnrolledStudentIds
+                .Select(id => StudentService.GetById(id))
+                .Where(s => s != null)
+                .Cast<Student>()
+                .ToList();
+        }
+        else
+        {
+            EnrolledStudents = new List<Student>();
+        }
+        
+        StateHasChanged();
     }
+
+
+
 
     private string GetStatusColor(EnrollmentStatus status) => status switch
     {

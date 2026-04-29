@@ -1,4 +1,6 @@
 @page "/faculty/grades"
+@rendermode InteractiveServer
+
 <PageTitle>EduConnect - Grade Entry</PageTitle>
 @using EduConnect.Interfaces
 @using EduConnect.Models
@@ -103,10 +105,21 @@
         if (Guid.TryParse(e.Value?.ToString(), out var courseId))
         {
             selectedCourse = CourseService.GetById(courseId);
-            if (selectedCourse != null)
+            if (selectedCourse != null && selectedCourse.EnrolledStudentIds != null)
             {
                 gradeMarks.Clear();
+                var existingGrades = GradeService.GetGradesForCourse(courseId);
+                foreach (var studentId in selectedCourse.EnrolledStudentIds)
+                {
+                    var existing = existingGrades.FirstOrDefault(g => g.StudentId == studentId);
+                    gradeMarks[studentId] = existing?.Marks ?? 0;
+                }
             }
+        }
+        else
+        {
+            selectedCourse = null;
+            gradeMarks.Clear();
         }
     }
 
@@ -120,11 +133,15 @@
         if (selectedCourse == null)
             return;
 
+        var existingGradesForCourse = GradeService.GetGradesForCourse(selectedCourse.Id);
+
         foreach (var (studentId, marks) in gradeMarks)
         {
+            var existing = existingGradesForCourse.FirstOrDefault(g => g.StudentId == studentId);
+
             var grade = new GradeRecord
             {
-                Id = Guid.NewGuid(),
+                Id = existing?.Id ?? Guid.NewGuid(),
                 StudentId = studentId,
                 CourseId = selectedCourse.Id,
                 Marks = marks
