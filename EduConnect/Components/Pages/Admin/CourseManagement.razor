@@ -20,8 +20,8 @@
         {
             <div class="card mb-4">
                 <div class="card-body">
-                    <h5>Add New Course</h5>
-                    <form @onsubmit="AddCourse">
+                    <h5>@(IsEditMode ? "Edit Course" : "Add New Course")</h5>
+                    <form @onsubmit="@(IsEditMode ? UpdateCourse : AddCourse)">
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">Course Code</label>
@@ -46,7 +46,7 @@
                                 <input type="text" class="form-control" disabled value="(Faculty assignment required)" />
                             </div>
                         </div>
-                        <button type="submit" class="btn btn-success btn-sm">Add</button>
+                        <button type="submit" class="btn @(IsEditMode ? "btn-warning" : "btn-success") btn-sm">@(IsEditMode ? "Update" : "Add")</button>
                         <button type="button" class="btn btn-secondary btn-sm" @onclick="HideAddForm">Cancel</button>
                     </form>
                 </div>
@@ -104,6 +104,7 @@
     private List<Course>? courses;
     private Course newCourse = new();
     private bool ShowNewCourseForm = false;
+    private bool IsEditMode = false;
 
     protected override void OnInitialized()
     {
@@ -118,12 +119,15 @@
     private void ShowAddForm()
     {
         ShowNewCourseForm = true;
+        IsEditMode = false;
         newCourse = new Course { Id = Guid.NewGuid() };
     }
 
     private void HideAddForm()
     {
         ShowNewCourseForm = false;
+        IsEditMode = false;
+        newCourse = new Course();
     }
 
     private void AddCourse()
@@ -135,7 +139,24 @@
 
     private void EditCourse(Course course)
     {
-        // Implementation for editing
+        ShowNewCourseForm = true;
+        IsEditMode = true;
+        newCourse = new Course
+        {
+            Id = course.Id,
+            Code = course.Code,
+            Title = course.Title,
+            CreditHours = course.CreditHours,
+            MaxCapacity = course.MaxCapacity,
+            FacultyId = course.FacultyId
+        };
+    }
+
+    private void UpdateCourse()
+    {
+        CourseService.Update(newCourse);
+        RefreshCourses();
+        HideAddForm();
     }
 
     private void DeleteCourse(Course course)

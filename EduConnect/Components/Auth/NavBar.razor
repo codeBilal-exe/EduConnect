@@ -4,92 +4,108 @@
 
 @implements IDisposable
 
-<nav class="navbar navbar-expand-lg navbar-dark sticky-top shadow-sm"
+<nav class="navbar navbar-expand-lg navbar-dark sticky-top shadow"
      style="background-color: var(--brand-navy); border-bottom: 3px solid var(--brand-gold);">
-    <div class="container-fluid px-4">
-        <a class="navbar-brand d-flex align-items-center" href="/">
-            <img src="favicon.png" alt="EduConnect Logo" width="40" height="40"
-                 class="me-2 rounded-circle bg-white p-1">
-            <span class="fw-bold">EduConnect</span>
+    <div class="container-fluid px-3 px-lg-4">
+
+        @* Brand *@
+        <a class="navbar-brand d-flex align-items-center gap-2 py-2" href="/">
+            <img src="favicon.png" alt="EduConnect Logo" width="38" height="38"
+                 class="rounded-circle bg-white p-1 flex-shrink-0">
+            <span class="fw-bold fs-5 lh-1">EduConnect</span>
         </a>
-        <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+
+        @* Toggler (mobile) *@
+        <button class="navbar-toggler border-0 p-1" type="button" @onclick="ToggleMenu"
+                aria-label="Toggle navigation" aria-expanded="@IsMenuOpen">
             <span class="navbar-toggler-icon"></span>
         </button>
-        <div class="collapse navbar-collapse" id="navbarNav">
-            <ul class="navbar-nav ms-auto">
-                @if (CurrentUser != null)
-                {
-                    <li class="nav-item">
-                        <span class="navbar-text me-3">
-                            @CurrentUser.FullName
-                            <span class="badge bg-primary">@CurrentUser.Role</span>
-                        </span>
-                    </li>
 
+        @* Collapsible content *@
+        <div class="@($"collapse navbar-collapse {(IsMenuOpen ? "show" : "")}")">
+
+            @if (CurrentUser != null)
+            {
+                @* Nav links *@
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
                     @if (CurrentUser.Role == UserRole.Admin)
                     {
                         <li class="nav-item">
-                            <a class="nav-link" href="/admin/students">Students</a>
+                            <a class="nav-link px-3" href="/admin/students">Students</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="/admin/courses">Courses</a>
+                            <a class="nav-link px-3" href="/admin/courses">Courses</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="/admin/reports/grades">Grade Reports</a>
+                            <a class="nav-link px-3" href="/admin/reports/grades">Grade Reports</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="/admin/notifications">Announcements</a>
+                            <a class="nav-link px-3" href="/admin/notifications">Announcements</a>
                         </li>
                     }
-
                     @if (CurrentUser.Role == UserRole.Faculty)
                     {
                         <li class="nav-item">
-                            <a class="nav-link" href="/faculty/courses">My Courses</a>
+                            <a class="nav-link px-3" href="/faculty/courses">My Courses</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="/faculty/grades">Grade Entry</a>
+                            <a class="nav-link px-3" href="/faculty/grades">Grade Entry</a>
                         </li>
                     }
-
                     @if (CurrentUser.Role == UserRole.Student)
                     {
                         <li class="nav-item">
-                            <a class="nav-link position-relative" href="/student/enroll">
+                            <a class="nav-link px-3 position-relative" href="/student/enroll">
                                 Enroll
                                 @if (EnrolledCredits > 0)
                                 {
-                                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-info">
+                                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-info text-dark">
                                         @EnrolledCredits cr
                                     </span>
                                 }
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="/courses">Catalog</a>
+                            <a class="nav-link px-3" href="/courses">Catalog</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="/student/grades">My Grades</a>
+                            <a class="nav-link px-3" href="/student/grades">My Grades</a>
                         </li>
                     }
-
                     <li class="nav-item">
-                        <a class="nav-link" href="/notifications">
-                            📬 Notifications
-                        </a>
+                        <a class="nav-link px-3" href="/notifications">Notifications</a>
                     </li>
+                </ul>
 
-                    <li class="nav-item">
-                        <button class="btn btn-outline-light btn-sm" @onclick="HandleLogout">Logout</button>
-                    </li>
-                }
-                else
-                {
+                @* Divider visible on mobile only *@
+                <hr class="d-lg-none border-secondary my-2" />
+
+                @* User info + logout *@
+                <div class="d-flex flex-column flex-lg-row align-items-start align-items-lg-center gap-2 pb-2 pb-lg-0">
+                    <div class="d-flex align-items-center gap-2">
+                        <div class="bg-white bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center fw-bold text-white"
+                             style="width:34px; height:34px; font-size:0.8rem;">
+                            @GetInitials(CurrentUser.FullName)
+                        </div>
+                        <div class="lh-sm">
+                            <div class="text-white fw-semibold small">@CurrentUser.FullName</div>
+                            <span class="badge bg-primary">@CurrentUser.Role</span>
+                        </div>
+                    </div>
+                    <button class="btn btn-outline-light btn-sm w-100 w-lg-auto" @onclick="HandleLogout">
+                        Logout
+                    </button>
+                </div>
+            }
+            else
+            {
+                <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
                     <li class="nav-item">
                         <a class="nav-link" href="/login">Login</a>
                     </li>
-                }
-            </ul>
+                </ul>
+            }
+
         </div>
     </div>
 </nav>
@@ -106,18 +122,18 @@
 
     private Person? CurrentUser => AuthStateService?.CurrentUser;
     private int EnrolledCredits => ComputeEnrolledCredits();
+    private bool IsMenuOpen = false;
 
     protected override void OnInitialized()
     {
         if (AuthStateService != null)
-        {
             AuthStateService.OnAuthStateChanged += StateChanged;
-        }
 
         if (CourseService != null)
-        {
             CourseService.OnEnrollmentChanged += OnEnrollmentChanged;
-        }
+
+        if (NavigationManager != null)
+            NavigationManager.LocationChanged += OnLocationChanged;
     }
 
     private int ComputeEnrolledCredits()
@@ -125,23 +141,29 @@
         if (CurrentUser?.Role != UserRole.Student || CourseService == null)
             return 0;
 
-        var allCourses = CourseService.GetAll();
-        var enrolledCredits = allCourses
+        return CourseService.GetAll()
             .Where(c => c.EnrolledStudentIds.Contains(CurrentUser.Id))
             .Sum(c => c.CreditHours);
-
-        return enrolledCredits;
     }
 
-    private void StateChanged()
+    private string GetInitials(string fullName)
     {
+        if (string.IsNullOrWhiteSpace(fullName)) return "?";
+        var parts = fullName.Trim().Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        if (parts.Length == 1) return parts[0][0].ToString().ToUpper();
+        return $"{parts[0][0]}{parts[^1][0]}".ToUpper();
+    }
+
+    private void ToggleMenu() => IsMenuOpen = !IsMenuOpen;
+
+    private void OnLocationChanged(object? sender, Microsoft.AspNetCore.Components.Routing.LocationChangedEventArgs e)
+    {
+        IsMenuOpen = false;
         StateHasChanged();
     }
 
-    private void OnEnrollmentChanged()
-    {
-        StateHasChanged();
-    }
+    private void StateChanged() => StateHasChanged();
+    private void OnEnrollmentChanged() => StateHasChanged();
 
     private void HandleLogout()
     {
@@ -152,13 +174,12 @@
     void IDisposable.Dispose()
     {
         if (AuthStateService != null)
-        {
             AuthStateService.OnAuthStateChanged -= StateChanged;
-        }
 
         if (CourseService != null)
-        {
             CourseService.OnEnrollmentChanged -= OnEnrollmentChanged;
-        }
+
+        if (NavigationManager != null)
+            NavigationManager.LocationChanged -= OnLocationChanged;
     }
 }
