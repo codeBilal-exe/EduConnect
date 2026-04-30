@@ -21,7 +21,11 @@
             <div class="card mb-4">
                 <div class="card-body">
                     <h5>@(IsEditMode ? "Edit Course" : "Add New Course")</h5>
-                    <form @onsubmit="@(IsEditMode ? UpdateCourse : AddCourse)">
+                    @if (!string.IsNullOrEmpty(ErrorMessage))
+                    {
+                        <div class="alert alert-danger" role="alert">@ErrorMessage</div>
+                    }
+                    <form @onsubmit="@(IsEditMode? UpdateCourse : AddCourse)">
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">Course Code</label>
@@ -46,65 +50,68 @@
                                 <input type="text" class="form-control" disabled value="(Faculty assignment required)" />
                             </div>
                         </div>
-                        <button type="submit" class="btn @(IsEditMode ? "btn-warning" : "btn-success") btn-sm">@(IsEditMode ? "Update" : "Add")</button>
-                        <button type="button" class="btn btn-secondary btn-sm" @onclick="HideAddForm">Cancel</button>
-                    </form>
+                        <button type="submit" class="btn @(IsEditMode ? "btn-warning" : "btn-success") btn-sm">@(IsEditMode
+                                                    ? "Update" : "Add")</button>
+                            <button type="button" class="btn btn-secondary btn-sm" @onclick="HideAddForm">Cancel</button>
+                        </form>
+                    </div>
                 </div>
-            </div>
-        }
+            }
 
-        @if (courses == null)
-        {
-            <p>Loading...</p>
-        }
-        else if (courses.Count == 0)
-        {
-            <div class="alert alert-info">No courses found.</div>
-        }
-        else
-        {
-            <div class="table-responsive">
-                <table class="table table-striped">
-                    <thead>
-                        <tr>
-                            <th>Code</th>
-                            <th>Title</th>
-                            <th>Credit Hours</th>
-                            <th>Capacity</th>
-                            <th>Enrolled</th>
-                            <th>Status</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach (var course in courses)
-                        {
+            @if (courses == null)
+            {
+                <p>Loading...</p>
+            }
+            else if (courses.Count == 0)
+            {
+                <div class="alert alert-primary">No courses found.</div>
+            }
+            else
+            {
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
                             <tr>
-                                <td>@course.Code</td>
-                                <td>@course.Title</td>
-                                <td>@course.CreditHours</td>
-                                <td>@course.MaxCapacity</td>
-                                <td>@course.EnrollmentCount</td>
-                                <td><span class="badge bg-@GetStatusColor(course.EnrollmentStatus)">@course.EnrollmentStatus</span>
-                                </td>
-                                <td>
-                                    <button class="btn btn-sm btn-warning" @onclick="() => EditCourse(course)">Edit</button>
-                                    <button class="btn btn-sm btn-danger" @onclick="() => DeleteCourse(course)">Delete</button>
-                                </td>
+                                <th>Code</th>
+                                <th>Title</th>
+                                <th>Credit Hours</th>
+                                <th>Capacity</th>
+                                <th>Enrolled</th>
+                                <th>Status</th>
+                                <th>Actions</th>
                             </tr>
-                        }
-                    </tbody>
-                </table>
-            </div>
-        }
-    </div>
-</AuthGuard>
+                        </thead>
+                        <tbody>
+                            @foreach (var course in courses)
+                            {
+                                <tr>
+                                    <td>@course.Code</td>
+                                    <td>@course.Title</td>
+                                    <td>@course.CreditHours</td>
+                                    <td>@course.MaxCapacity</td>
+                                    <td>@course.EnrollmentCount</td>
+                                    <td><span
+                                        class="badge bg-@GetStatusColor(course.EnrollmentStatus)">@course.EnrollmentStatus</span>
+                                    </td>
+                                    <td>
+                                        <button class="btn btn-sm btn-warning" @onclick="() => EditCourse(course)">Edit</button>
+                                        <button class="btn btn-sm btn-danger" @onclick="() => DeleteCourse(course)">Delete</button>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+    </AuthGuard>
 
 @code {
     private List<Course>? courses;
     private Course newCourse = new();
     private bool ShowNewCourseForm = false;
     private bool IsEditMode = false;
+    private string ErrorMessage = string.Empty;
 
     protected override void OnInitialized()
     {
@@ -120,6 +127,7 @@
     {
         ShowNewCourseForm = true;
         IsEditMode = false;
+        ErrorMessage = string.Empty;
         newCourse = new Course { Id = Guid.NewGuid() };
     }
 
@@ -127,11 +135,47 @@
     {
         ShowNewCourseForm = false;
         IsEditMode = false;
+        ErrorMessage = string.Empty;
         newCourse = new Course();
     }
 
     private void AddCourse()
     {
+        ErrorMessage = string.Empty;
+
+        // Validate course code is not empty
+        if (string.IsNullOrWhiteSpace(newCourse.Code))
+        {
+            ErrorMessage = "Course code is required.";
+            return;
+        }
+
+        // Check if course code already exists
+        if (CourseService.CourseCodeExists(newCourse.Code))
+        {
+            ErrorMessage = $"A course with code '{newCourse.Code}' already exists. Please use a different code.";
+            return;
+        }
+
+        // Validate other required fields
+        if (string.IsNullOrWhiteSpace(newCourse.Title))
+        {
+            ErrorMessage = "Course title is required.";
+            return;
+        }
+
+        if (newCourse.CreditHours <= 0)
+        {
+            ErrorMessage = "Credit hours must be greater than 0.";
+            return;
+        }
+
+        if (newCourse.MaxCapacity <= 0)
+        {
+            ErrorMessage = "Max capacity must be greater than 0.";
+            return;
+        }
+
         CourseService.Add(newCourse);
         RefreshCourses();
         HideAddForm();
@@ -141,6 +185,7 @@
     {
         ShowNewCourseForm = true;
         IsEditMode = true;
+        ErrorMessage = string.Empty;
         newCourse = new Course
         {
             Id = course.Id,
@@ -154,6 +199,41 @@
 
     private void UpdateCourse()
     {
+        ErrorMessage = string.Empty;
+
+        // Validate course code is not empty
+        if (string.IsNullOrWhiteSpace(newCourse.Code))
+        {
+            ErrorMessage = "Course code is required.";
+            return;
+        }
+
+        // Check if course code already exists (excluding the current course)
+        if (CourseService.CourseCodeExists(newCourse.Code, newCourse.Id))
+        {
+            ErrorMessage = $"A course with code '{newCourse.Code}' already exists. Please use a different code.";
+            return;
+        }
+
+        // Validate other required fields
+        if (string.IsNullOrWhiteSpace(newCourse.Title))
+        {
+            ErrorMessage = "Course title is required.";
+            return;
+        }
+
+        if (newCourse.CreditHours <= 0)
+        {
+            ErrorMessage = "Credit hours must be greater than 0.";
+            return;
+        }
+
+        if (newCourse.MaxCapacity <= 0)
+        {
+            ErrorMessage = "Max capacity must be greater than 0.";
+            return;
+        }
+
         CourseService.Update(newCourse);
         RefreshCourses();
         HideAddForm();

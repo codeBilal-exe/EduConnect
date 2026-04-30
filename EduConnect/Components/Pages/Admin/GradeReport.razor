@@ -22,7 +22,7 @@
         }
         else if (students.Count == 0)
         {
-            <div class="alert alert-info">No students found.</div>
+            <div class="alert alert-primary">No students found.</div>
         }
         else
         {
@@ -80,7 +80,8 @@
                             <tbody>
                                 @foreach (var student in studentCGPAs.OrderByDescending(s => s.CGPA))
                                 {
-                                    var cgpaColor = student.CGPA >= 3.5 ? "success" : student.CGPA >= 2.0 ? "warning" : "danger";
+                                    var cgpaColor = student.CGPA >= 3.5 ? "success" : student.CGPA >= 2.0 ? "warning" :
+        "danger";
                                     <tr>
                                         <td>@student.Student.FullName</td>
                                         <td>@student.Student.Semester</td>

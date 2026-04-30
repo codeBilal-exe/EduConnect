@@ -88,29 +88,6 @@ The system is engineered as a **Blazor Interactive Server** application, priorit
 
 ---
 
-## 🏗️ Architecture
-
-### High-Level Design
-
-```mermaid
-graph TD
-    UI[Razor Components / UI Layer] -->|Injects| Services[Service Layer / Business Logic]
-    Services -->|Persists| Data[Data Layer / Repository]
-    
-    subgraph Services
-        S1[StudentService]
-        S2[CourseService]
-        S3[GradeService]
-        S4[NotificationService]
-    end
-    
-    subgraph Models
-        M1[Person / Roles]
-        M2[Course / Enrollment]
-        M3[Grade / Record]
-    end
-```
-
 ### Event System
 EduConnect utilizes a decoupled event-driven architecture to keep the UI synchronized:
 - `OnEnrollmentChanged` 🔄 Updates navigation counters.
@@ -147,8 +124,8 @@ Open [https://localhost:7000](https://localhost:7000) in your browser.
 | Role | Username | Password |
 |---|---|---|
 | 🛡️ **Admin** | `admin@educonnect.com` | `admin123` |
-| 👨‍🏫 **Faculty** | `faculty@educonnect.com` | `faculty123` |
-| 🎓 **Student** | `student@educonnect.com` | `student123` |
+| 👨‍🏫 **Faculty** | `faculty1@educonnect.com` | `faculty123` |
+| 🎓 **Student** | `student1@educonnect.com` | `student123` |
 
 ---
 

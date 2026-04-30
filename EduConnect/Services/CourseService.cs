@@ -80,6 +80,12 @@ public class CourseService : ICourseService
             .ToList();
     }
 
+    // DIP: Check if course code already exists (excluding current course in edit mode)
+    public bool CourseCodeExists(string code, Guid? excludeId = null)
+    {
+        return _courses.Any(c => c.Code.Equals(code, StringComparison.OrdinalIgnoreCase) && c.Id != excludeId);
+    }
+
     // SRP: Enrollment logic is concentrated here, not in components
     public void EnrollStudent(Guid courseId, Guid studentId)
     {

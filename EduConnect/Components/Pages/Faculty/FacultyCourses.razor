@@ -26,7 +26,7 @@
         }
         else if (assignedCourses.Count == 0)
         {
-            <div class="alert alert-info">You have no assigned courses.</div>
+            <div class="alert alert-primary">You have no assigned courses.</div>
         }
         else
         {
@@ -51,7 +51,7 @@
                                     </div>
                                 </div>
                                 <a href="/faculty/grades" class="btn btn-primary btn-sm">Enter Grades</a>
-                                <button class="btn btn-info btn-sm" @onclick="() => ViewEnrollments(course)">View Enrolled
+                                <button class="btn btn-primary btn-sm" @onclick="() => ViewEnrollments(course)">View Enrolled
                                     Students</button>
                                 </div>
                             </div>
@@ -62,7 +62,7 @@
                 @if (SelectedCourse != null)
                 {
                     <div class="card mt-4 border-info shadow-sm">
-                        <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
+                        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
                             <h5 class="mb-0">Enrolled Students: @SelectedCourse.Title</h5>
                             <button class="btn btn-sm btn-light" @onclick="() => SelectedCourse = null">Close</button>
                         </div>
@@ -70,7 +70,7 @@
                             @if (EnrolledStudents == null)
                             {
                                 <div class="text-center py-4">
-                                    <div class="spinner-border text-info" role="status">
+                                    <div class="spinner-border text-primary" role="status">
                                         <span class="visually-hidden">Loading...</span>
                                     </div>
                                 </div>
@@ -102,7 +102,7 @@
                                                     </td>
                                                     <td>@student.Email</td>
                                                     <td class="text-center">
-                                                        <span class="badge bg-secondary">Semester @student.Semester</span>
+                                                        <span class="badge bg-primary">Semester @student.Semester</span>
                                                     </td>
                                                 </tr>
                                             }
@@ -115,7 +115,7 @@
                 }
             }
         </div>
-</AuthGuard>
+    </AuthGuard>
 
 @code {
     private List<Course>? assignedCourses;

@@ -8,6 +8,7 @@ public interface ICourseService : IRepository<Course>
 {
     List<Course> GetAvailableCourses();
     List<Course> GetCoursesByFaculty(Guid facultyId);
+    bool CourseCodeExists(string code, Guid? excludeId = null);
     void EnrollStudent(Guid courseId, Guid studentId);
     void DropCourse(Guid courseId, Guid studentId);
 

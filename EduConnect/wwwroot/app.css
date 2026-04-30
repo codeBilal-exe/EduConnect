@@ -46,7 +46,7 @@ h1, h2, h3, h4, h5, h6, .navbar-brand {
     background-color: var(--brand-blue);
     border-color: var(--brand-blue);
     transform: translateY(-1px);
-    box-shadow: 0 4px 6px rgba(16, 97, 171, 0.2);
+    box-shadow: 0 4px 6px rgba(9, 53, 92, 0.2);
 }
 
 .btn-accent {
@@ -63,7 +63,7 @@ h1, h2, h3, h4, h5, h6, .navbar-brand {
     border-color: var(--brand-gold-hover);
     color: white;
     transform: translateY(-1px);
-    box-shadow: 0 4px 6px rgba(216, 159, 42, 0.3);
+    box-shadow: 0 4px 6px rgba(201, 168, 76, 0.3);
 }
 
 /* Card Overrides */
@@ -117,4 +117,116 @@ h1, h2, h3, h4, h5, h6, .navbar-brand {
     letter-spacing: -0.5px;
 }
 
+/* Bootstrap Color System Overrides */
+:root {
+    --bs-primary-rgb: 9, 53, 92;
+    --bs-primary: var(--brand-navy);
+    --bs-secondary-rgb: 16, 97, 171;
+    --bs-secondary: var(--brand-blue);
+}
 
+/* Badge Color Overrides */
+.badge.bg-primary {
+    background-color: var(--brand-navy) !important;
+    color: white;
+}
+
+.badge.bg-secondary {
+    background-color: var(--brand-blue) !important;
+    color: white;
+}
+
+.badge.bg-success {
+    background-color: #28a745 !important;
+    color: white;
+}
+
+.badge.bg-danger {
+    background-color: #dc3545 !important;
+}
+
+/* Alert Color Overrides */
+.alert-primary {
+    background-color: #e7f1ff;
+    border-color: var(--brand-blue);
+    color: var(--brand-navy);
+}
+
+.alert-primary .alert-link {
+    color: #052c65;
+}
+
+/* Background Color Overrides */
+.bg-primary {
+    background-color: var(--brand-navy) !important;
+}
+
+.bg-secondary {
+    background-color: var(--brand-blue) !important;
+}
+
+.bg-success {
+    background-color: #28a745 !important;
+}
+
+.bg-info {
+    background-color: #0dcaf0 !important;
+}
+
+/* Text Color Overrides */
+.text-primary {
+    color: var(--brand-navy) !important;
+}
+
+.text-secondary {
+    color: var(--brand-blue) !important;
+}
+
+/* Button Color Overrides */
+.btn-primary {
+    background-color: var(--brand-navy) !important;
+    border-color: var(--brand-navy) !important;
+    color: white !important;
+}
+
+.btn-primary:hover, .btn-primary:focus, .btn-primary:active {
+    background-color: var(--brand-blue) !important;
+    border-color: var(--brand-blue) !important;
+}
+
+.btn-outline-primary {
+    color: var(--brand-navy) !important;
+    border-color: var(--brand-navy) !important;
+}
+
+.btn-outline-primary:hover, .btn-outline-primary:focus {
+    background-color: var(--brand-navy) !important;
+    border-color: var(--brand-navy) !important;
+    color: white !important;
+}
+
+/* Card Header Override */
+.card-header {
+    background-color: var(--brand-navy) !important;
+    border-color: var(--brand-navy) !important;
+}
+
+/* Blazor Error UI */
+#blazor-error-ui {
+    background: lightyellow;
+    bottom: 0;
+    box-shadow: 0 -1px 2px rgba(0, 0, 0, 0.2);
+    display: none;
+    left: 0;
+    padding: 0.6rem 1.25rem 0.7rem 1.25rem;
+    position: fixed;
+    width: 100%;
+    z-index: 1000;
+}
+
+#blazor-error-ui .dismiss {
+    cursor: pointer;
+    position: absolute;
+    right: 0.75rem;
+    top: 0.5rem;
+}

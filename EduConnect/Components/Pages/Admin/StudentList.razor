@@ -17,7 +17,8 @@
         <a href="/admin/students/add" class="btn btn-primary mb-3">Add New Student</a>
 
         <div class="mb-3">
-            <input type="text" class="form-control" placeholder="Search by name..." @bind="SearchTerm" @bind:event="oninput" />
+            <input type="text" class="form-control" placeholder="Search by name..." @bind="SearchTerm"
+                   @bind:event="oninput" />
         </div>
 
         @if (!string.IsNullOrEmpty(ErrorMessage))
@@ -31,7 +32,7 @@
         }
         else if (displayedStudents.Count == 0)
         {
-            <div class="alert alert-info">No students found.</div>
+            <div class="alert alert-primary">No students found.</div>
         }
         else
         {
@@ -54,11 +55,12 @@
                                 <td>@student.FullName</td>
                                 <td>@student.Email</td>
                                 <td>@student.Semester</td>
-                                <td><span class="badge bg-info">@cgpa.ToString("F2")</span></td>
+                                <td><span class="badge bg-primary">@cgpa.ToString("F2")</span></td>
                                 <td>
                                     <a href="@($"/admin/students/{student.Id}")" class="btn btn-sm btn-info">View</a>
                                     <a href="@($"/admin/students/edit/{student.Id}")" class="btn btn-sm btn-warning">Edit</a>
-                                    <button class="btn btn-sm btn-danger" @onclick="() => ConfirmDelete(student)">Delete</button>
+                                    <button class="btn btn-sm btn-danger"
+                                            @onclick="() => ConfirmDelete(student)">Delete</button>
                                 </td>
                             </tr>
                         }

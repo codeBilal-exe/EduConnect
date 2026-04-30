@@ -1,0 +1,156 @@
+@page "/student/enrolled-courses"
+
+<PageTitle>EduConnect - My Enrolled Courses</PageTitle>
+
+@using EduConnect.Interfaces
+@using EduConnect.Models
+@using EduConnect.Models.Enums
+@using EduConnect.Components.Shared
+@namespace EduConnect.Components.Pages.Student
+
+@inject ICourseService CourseService
+@inject IAuthStateService AuthStateService
+@inject INotificationService NotificationService
+@inject NavigationManager NavigationManager
+
+<div class="container-fluid mt-4">
+    <h2>My Enrolled Courses</h2>
+
+    @if (!string.IsNullOrEmpty(ErrorMessage))
+    {
+        <AlertBox Message="@ErrorMessage" Type="AlertType.Error" />
+    }
+    @if (!string.IsNullOrEmpty(SuccessMessage))
+    {
+        <AlertBox Message="@SuccessMessage" Type="AlertType.Success" />
+    }
+
+    @if (enrolledCourses == null)
+    {
+        <LoadingSpinner IsLoading="true" />
+    }
+    else if (enrolledCourses.Count == 0)
+    {
+        <div class="alert alert-primary">
+            You are not enrolled in any courses yet. <a href="/student/enroll">Enroll now!</a>
+        </div>
+    }
+    else
+    {
+        <div class="row mb-4">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">Enrolled Courses (@enrolledCourses.Count)</h5>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Course Code</th>
+                                    <th>Course Title</th>
+                                    <th>Credit Hours</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var course in enrolledCourses)
+                                {
+                                    <tr>
+                                        <td>
+                                            <strong>@course.Code</strong>
+                                        </td>
+                                        <td>@course.Title</td>
+                                        <td><span class="badge bg-primary">@course.CreditHours</span></td>
+                                        <td>
+                                            <span class="badge bg-primary">Enrolled</span>
+                                        </td>
+                                        <td>
+                                            <button class="btn btn-sm btn-danger" @onclick="() => HandleDropCourse(course)"
+                                                    title="Drop this course">
+                                                Drop Course
+                                            </button>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+    <div class="mt-4">
+        <a href="/student/enroll" class="btn btn-primary">Enroll in More Courses</a>
+        <a href="/student/grades" class="btn btn-secondary">View My Grades</a>
+        <a href="/" class="btn btn-outline-secondary">Back to Dashboard</a>
+    </div>
+</div>
+
+@code {
+    private List<Course>? enrolledCourses;
+    private string ErrorMessage = string.Empty;
+    private string SuccessMessage = string.Empty;
+
+    protected override void OnInitialized()
+    {
+        var userId = AuthStateService.CurrentUser?.Id;
+        if (!userId.HasValue || AuthStateService.CurrentUser?.Role != UserRole.Student)
+        {
+            NavigationManager.NavigateTo("/unauthorized");
+            return;
+        }
+
+        LoadData();
+    }
+
+    private void LoadData()
+    {
+        var userId = AuthStateService.CurrentUser?.Id;
+        if (!userId.HasValue)
+            return;
+
+        // Get all courses and filter for ones the student is enrolled in
+        var allCourses = CourseService.GetAll();
+        enrolledCourses = allCourses
+            .Where(c => c.EnrolledStudentIds.Contains(userId.Value))
+            .ToList();
+    }
+
+    private void HandleDropCourse(Course course)
+    {
+        ErrorMessage = string.Empty;
+        SuccessMessage = string.Empty;
+
+        try
+        {
+            var studentId = AuthStateService.CurrentUser?.Id;
+            if (!studentId.HasValue)
+                return;
+
+            CourseService.DropCourse(course.Id, studentId.Value);
+            SuccessMessage = $"Successfully dropped {course.Title}!";
+
+            // Send Notification
+            var notification = new Notification
+            {
+                Id = Guid.NewGuid(),
+                UserId = studentId.Value,
+                Message = $"You have dropped the course {course.Code} - {course.Title}.",
+                Type = NotificationType.Enrollment,
+                CreatedAt = DateTime.Now,
+                IsRead = false
+            };
+            NotificationService.SendNotification(notification);
+
+            // Reload data
+            LoadData();
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Error dropping course: {ex.Message}";
+        }
+    }
+}

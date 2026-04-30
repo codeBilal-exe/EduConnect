@@ -5,14 +5,16 @@ namespace EduConnect.Data;
 
 public static class SeedData
 {
-    // Stable GUIDs for consistent data across restarts
     private static readonly Guid AdminId = Guid.Parse("00000001-0000-0000-0000-000000000001");
+
     private static readonly Guid Faculty1Id = Guid.Parse("00000001-0000-0000-0000-000000000002");
     private static readonly Guid Faculty2Id = Guid.Parse("00000001-0000-0000-0000-000000000003");
-    private static readonly Guid Student1Id = Guid.Parse("00000001-0000-0000-0000-000000000004");
-    private static readonly Guid Student2Id = Guid.Parse("00000001-0000-0000-0000-000000000005");
-    private static readonly Guid Student3Id = Guid.Parse("00000001-0000-0000-0000-000000000006");
-    private static readonly Guid Student4Id = Guid.Parse("00000001-0000-0000-0000-000000000007");
+    private static readonly Guid Faculty3Id = Guid.Parse("00000001-0000-0000-0000-000000000004");
+
+    private static readonly Guid Student1Id = Guid.Parse("00000001-0000-0000-0000-000000000005");
+    private static readonly Guid Student2Id = Guid.Parse("00000001-0000-0000-0000-000000000006");
+    private static readonly Guid Student3Id = Guid.Parse("00000001-0000-0000-0000-000000000007");
+    private static readonly Guid Student4Id = Guid.Parse("00000001-0000-0000-0000-000000000008");
 
     private static readonly Guid Course1Id = Guid.Parse("00000002-0000-0000-0000-000000000001");
     private static readonly Guid Course2Id = Guid.Parse("00000002-0000-0000-0000-000000000002");
@@ -46,7 +48,7 @@ public static class SeedData
         new Faculty
         {
             Id = Faculty1Id,
-            FullName = "Dr. Ahmed Khan",
+            FullName = "Hafiz Obiadullah Khan",
             Email = "faculty1@edu.com",
             PasswordHash = "faculty123",
             Role = UserRole.Faculty,
@@ -56,18 +58,28 @@ public static class SeedData
         new Faculty
         {
             Id = Faculty2Id,
-            FullName = "Prof. Sara Ahmed",
+            FullName = "Prof. Atif Aslam",
             Email = "faculty2@edu.com",
             PasswordHash = "faculty123",
             Role = UserRole.Faculty,
             Department = "Mathematics",
             AssignedCourseIds = new List<Guid> { Course3Id, Course4Id }
         },
+        new Faculty
+        {
+            Id = Faculty3Id,
+            FullName = "Mam Amna Tariq",
+            Email = "faculty3@edu.com",
+            PasswordHash = "faculty123",
+            Role = UserRole.Faculty,
+            Department = "Mathematics",
+            AssignedCourseIds = new List<Guid> { Course5Id, Course6Id }
+        },
         // Students
         new Student
         {
             Id = Student1Id,
-            FullName = "Ali Hassan",
+            FullName = "Muhammad Bilal",
             Email = "student1@edu.com",
             PasswordHash = "student123",
             Role = UserRole.Student,
@@ -76,7 +88,7 @@ public static class SeedData
         new Student
         {
             Id = Student2Id,
-            FullName = "Fatima Khan",
+            FullName = "Usaidullah Rehan",
             Email = "student2@edu.com",
             PasswordHash = "student123",
             Role = UserRole.Student,
@@ -85,7 +97,7 @@ public static class SeedData
         new Student
         {
             Id = Student3Id,
-            FullName = "Omar Ali",
+            FullName = "Sajjad Ejaz",
             Email = "student3@edu.com",
             PasswordHash = "student123",
             Role = UserRole.Student,
@@ -94,7 +106,7 @@ public static class SeedData
         new Student
         {
             Id = Student4Id,
-            FullName = "Zainab Malik",
+            FullName = "Abdullah Abdullah",
             Email = "student4@edu.com",
             PasswordHash = "student123",
             Role = UserRole.Student,
@@ -151,7 +163,7 @@ public static class SeedData
             Title = "Database Systems",
             CreditHours = 3,
             MaxCapacity = 3,
-            FacultyId = Faculty1Id,
+            FacultyId = Faculty3Id,
             EnrolledStudentIds = new List<Guid>()
         },
         new Course
@@ -161,7 +173,7 @@ public static class SeedData
             Title = "Physics I",
             CreditHours = 4,
             MaxCapacity = 4,
-            FacultyId = Faculty2Id,
+            FacultyId = Faculty3Id,
             EnrolledStudentIds = new List<Guid> { Student4Id }
         }
     };

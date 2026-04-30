@@ -12,6 +12,7 @@ public class NotificationService : INotificationService
 
     // Event-driven: Components subscribe to this and re-render reactively
     public event Action<Notification>? OnNewNotification;
+    public event Action<Guid>? OnNotificationMarkedAsRead;
 
     public NotificationService()
     {
@@ -41,6 +42,8 @@ public class NotificationService : INotificationService
         if (notification != null)
         {
             notification.IsRead = true;
+            // Fire event so all subscribers (like NotificationBell) update the counter
+            OnNotificationMarkedAsRead?.Invoke(notificationId);
         }
     }
 
