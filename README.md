@@ -49,13 +49,14 @@ The system is engineered as a **Blazor Interactive Server** application, priorit
 
 ### 👤 Authentication & Security
 - **Role-Based Access Control (RBAC):** Dedicated permissions for Student, Faculty, and Admin.
-- **Secure Sessions:** Robust login system with session state management.
+- **Glassmorphism Login UI:** High-end, frosted-glass interface with deep blue brand gradients.
+- **Password Visibility Toggle:** Built-in show/hide functionality for secure credential entry.
 - **Route Guards:** `AuthGuard` implementation protecting sensitive pages.
 
 ### 📚 Course Management
 - **Lifecycle Management:** Create, update, and archive courses with ease.
 - **Dynamic Capacity:** Real-time tracking of course availability (`Open` → `Almost Full` → `Full`).
-- **Faculty Allocation:** Assign courses to specific faculty members efficiently.
+- **Faculty Allocation:** Assign courses to specific faculty members with verified data integrity.
 
 ### 🎓 Student Experience
 - **Interactive Enrollment:** Browse catalogs and enroll in courses instantly.
@@ -67,10 +68,11 @@ The system is engineered as a **Blazor Interactive Server** application, priorit
 - **CGPA Engine:** Real-time credit-weighted CGPA computation.
 - **Faculty Portal:** Streamlined interface for grade submission and review.
 
-### 📢 Real-Time Notifications
+### 🔔 Advanced Notification System
 - **Event-Driven Alerts:** Instant notifications for enrollment confirmations and grade updates.
-- **System Broadcasts:** Admin announcements delivered to all users simultaneously.
-- **Interactive Badge:** Notification bell with unread count tracking.
+- **Interactive Popup:** Modern bell dropdown with "Mark all as read" and "Click-outside to close" functionality.
+- **Real-time Synchronization:** UI updates instantly across components when notifications are managed.
+- **Dedicated Inbox:** A full-page notification center with detailed status filtering.
 
 ---
 
@@ -80,7 +82,8 @@ The system is engineered as a **Blazor Interactive Server** application, priorit
 |---|---|
 | **Core Framework** | ASP.NET Core 8.0 |
 | **Frontend** | Blazor Interactive Server (C# / Razor) |
-| **Styling** | Bootstrap 5.3 + Custom CSS Architecture |
+| **Design System** | Premium Blue & Gold Palette (Glassmorphism) |
+| **Styling** | Bootstrap 5.3 + Standardized CSS Architecture |
 | **Icons** | Bootstrap Icons 1.11 |
 | **Typography** | Google Fonts (Outfit & Inter) |
 | **Inversion of Control** | Native .NET Dependency Injection |
