@@ -7,10 +7,10 @@ namespace EduConnect.Interfaces;
 public interface ICourseService : IRepository<Course>
 {
     List<Course> GetAvailableCourses();
-    List<Course> GetCoursesByFaculty(Guid facultyId);
-    bool CourseCodeExists(string code, Guid? excludeId = null);
-    void EnrollStudent(Guid courseId, Guid studentId);
-    void DropCourse(Guid courseId, Guid studentId);
+    List<Course> GetCoursesByFaculty(int facultyId);
+    bool CourseCodeExists(string code, int? excludeId = null);
+    void EnrollStudent(int courseId, int studentId);
+    void DropCourse(int courseId, int studentId);
 
     event Action? OnEnrollmentChanged;
 }

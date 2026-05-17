@@ -4,9 +4,9 @@ namespace EduConnect.Interfaces;
 // DIP: Depend on abstraction, not concrete implementations
 public interface IRepository<T>
 {
-    T? GetById(Guid id);
+    T? GetById(int id);
     List<T> GetAll();
     void Add(T entity);
     void Update(T entity);
-    void Delete(Guid id);
+    void Delete(int id);
 }

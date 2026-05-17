@@ -8,7 +8,7 @@ public class Faculty : Person
     public string Department { get; set; } = string.Empty;
 
     // ISP: Faculty manages their own assigned course IDs, not grades
-    public List<Guid> AssignedCourseIds { get; set; } = new();
+    public List<int> AssignedCourseIds { get; set; } = new();
 
     public override string GetRole() => "Faculty";
 }

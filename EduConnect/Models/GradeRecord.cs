@@ -2,9 +2,9 @@ namespace EduConnect.Models;
 
 public class GradeRecord
 {
-    public required Guid Id { get; init; }
-    public required Guid StudentId { get; set; }
-    public required Guid CourseId { get; set; }
+    public int Id { get; set; } = 0;
+    public required int StudentId { get; set; }
+    public required int CourseId { get; set; }
     public required double Marks { get; set; }
 
     // Computed property: letter grade based on marks

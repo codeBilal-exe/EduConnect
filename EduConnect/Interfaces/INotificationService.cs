@@ -7,10 +7,10 @@ namespace EduConnect.Interfaces;
 public interface INotificationService
 {
     event Action<Notification>? OnNewNotification;
-    event Action<Guid>? OnNotificationMarkedAsRead;
+    event Action<int>? OnNotificationMarkedAsRead;
 
     void SendNotification(Notification notification);
-    List<Notification> GetNotificationsForUser(Guid userId);
-    void MarkAsRead(Guid notificationId);
-    int GetUnreadCount(Guid userId);
+    List<Notification> GetNotificationsForUser(int studentId);
+    void MarkAsRead(int notificationId);
+    int GetUnreadCount(int studentId);
 }

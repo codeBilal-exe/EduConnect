@@ -1,85 +1,131 @@
 using EduConnect.Data;
+using EduConnect.Data.Entities;
 using EduConnect.Interfaces;
 using EduConnect.Models;
+using EduConnect.Models.Enums;
 using EduConnect.Models.Exceptions;
+using Microsoft.EntityFrameworkCore;
 
 namespace EduConnect.Services;
 
-// SRP: Only manages student data
-// DIP: Implements IStudentService abstraction
 public class StudentService : IStudentService
 {
-    private readonly List<Person> _users;
+    private readonly IDbContextFactory<AppDbContext> _dbContextFactory;
     private readonly IGradeService _gradeService;
     private readonly ICourseService _courseService;
 
     public event Action? OnStudentUpdated;
 
-    public StudentService(IGradeService gradeService, ICourseService courseService)
+    public StudentService(IDbContextFactory<AppDbContext> dbContextFactory, IGradeService gradeService, ICourseService courseService)
     {
+        _dbContextFactory = dbContextFactory;
         _gradeService = gradeService;
         _courseService = courseService;
-        _users = SeedData.Users;
     }
 
-    private IEnumerable<Student> _students => _users.OfType<Student>();
-
-    public Student? GetById(Guid id)
+    private static Student MapToStudent(StudentEntity entity)
     {
-        return _students.FirstOrDefault(s => s.Id == id);
+        return new Student
+        {
+            Id = entity.Id,
+            FullName = entity.FullName,
+            Email = entity.Email,
+            PasswordHash = entity.PasswordHash,
+            Role = UserRole.Student,
+            Semester = entity.Semester
+        };
+    }
+
+    public Student? GetById(int id)
+    {
+        using var context = _dbContextFactory.CreateDbContext();
+        var student = context.Students.FirstOrDefault(s => s.Id == id);
+        if (student == null)
+            return null;
+
+        return MapToStudent(student);
     }
 
     public List<Student> GetAll()
     {
-        return _students.ToList();
+        using var context = _dbContextFactory.CreateDbContext();
+        var students = context.Students.AsNoTracking().ToList();
+        return students.Select(MapToStudent).ToList();
     }
-
 
     public void Add(Student entity)
     {
-        if (!_users.Any(s => s.Id == entity.Id))
+        using var context = _dbContextFactory.CreateDbContext();
+        if (context.Students.Any(s => s.Email == entity.Email))
+            return;
+
+        context.Students.Add(new StudentEntity
         {
-            _users.Add(entity);
-        }
+            FullName = entity.FullName,
+            Email = entity.Email,
+            PasswordHash = entity.PasswordHash,
+            Semester = entity.Semester
+        });
+
+        context.SaveChanges();
     }
 
     public void Update(Student entity)
     {
-        var existing = GetById(entity.Id);
-        if (existing != null)
-        {
-            existing.FullName = entity.FullName;
-            existing.Email = entity.Email;
-            existing.Semester = entity.Semester;
-            OnStudentUpdated?.Invoke();
-        }
+        using var context = _dbContextFactory.CreateDbContext();
+        var existing = context.Students.FirstOrDefault(s => s.Id == entity.Id);
+        if (existing == null)
+            return;
+
+        existing.FullName = entity.FullName;
+        existing.Email = entity.Email;
+        existing.Semester = entity.Semester;
+
+        context.SaveChanges();
+        OnStudentUpdated?.Invoke();
     }
 
-    public void Delete(Guid id)
+    public void Delete(int id)
     {
-        var student = GetById(id);
-        if (student != null)
-        {
-            var hasActiveEnrollments = _courseService.GetAll().Any(c => c.EnrolledStudentIds.Contains(id));
-            if (hasActiveEnrollments)
-            {
-                throw new StudentHasActiveEnrollmentsException(student.FullName);
-            }
-            _users.Remove(student);
-        }
+        using var context = _dbContextFactory.CreateDbContext();
+        var student = context.Students.FirstOrDefault(s => s.Id == id);
+        if (student == null)
+            return;
+
+        var hasActiveEnrollments = context.Enrollments.Any(e => e.StudentId == id && e.State == EnrollmentState.Active);
+        if (hasActiveEnrollments)
+            throw new StudentHasActiveEnrollmentsException(student.FullName);
+
+        var notifications = context.Notifications.Where(n => n.StudentId == id).ToList();
+        if (notifications.Any())
+            context.Notifications.RemoveRange(notifications);
+
+        var enrollments = context.Enrollments.Where(e => e.StudentId == id).ToList();
+        if (enrollments.Any())
+            context.Enrollments.RemoveRange(enrollments);
+
+        var gradeRecords = context.GradeRecords.Where(g => g.StudentId == id).ToList();
+        if (gradeRecords.Any())
+            context.GradeRecords.RemoveRange(gradeRecords);
+
+        context.Students.Remove(student);
+        context.SaveChanges();
+
+        OnStudentUpdated?.Invoke();
     }
 
-
-    // ISP: Search is a specialized operation for students
     public List<Student> Search(string term)
     {
-        return _students
-            .Where(s => s.FullName.Contains(term, StringComparison.OrdinalIgnoreCase))
+        using var context = _dbContextFactory.CreateDbContext();
+        var students = context.Students
+            .Where(s => s.FullName.Contains(term))
+            .AsNoTracking()
             .ToList();
+
+        return students.Select(MapToStudent).ToList();
     }
 
-    // SRP: CGPA computation uses service dependencies (grade and course data)
-    public double ComputeCGPA(Guid studentId)
+    public double ComputeCGPA(int studentId)
     {
         var grades = _gradeService.GetGradesForStudent(studentId);
         if (grades.Count == 0)

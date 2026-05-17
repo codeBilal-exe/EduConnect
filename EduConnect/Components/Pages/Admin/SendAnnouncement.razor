@@ -90,14 +90,13 @@
         if (SendToStudent) rolesSelected.Add(UserRole.Student);
 
         var allUsers = AuthStateService.GetAllUsers();
-        var targetUsers = allUsers.Where(u => rolesSelected.Contains(u.Role)).ToList();
+        var targetUsers = allUsers.OfType<Student>().Where(u => rolesSelected.Contains(u.Role)).ToList();
         
         foreach (var user in targetUsers)
         {
             var notification = new Notification
             {
-                Id = Guid.NewGuid(),
-                UserId = user.Id,
+                StudentId = user.Id,
                 Message = Message,
                 Type = NotificationType.Announcement,
                 CreatedAt = DateTime.Now,

@@ -99,14 +99,14 @@
     private void HandleNewNotification(Notification notif)
     {
         var userId = AuthStateService.CurrentUser?.Id;
-        if (notif.UserId == userId)
+        if (notif.StudentId == userId)
         {
             notifications?.Insert(0, notif);
             StateHasChanged();
         }
     }
 
-    private void MarkAsRead(Guid notificationId)
+    private void MarkAsRead(int notificationId)
     {
         NotificationService.MarkAsRead(notificationId);
         var notif = notifications?.FirstOrDefault(n => n.Id == notificationId);

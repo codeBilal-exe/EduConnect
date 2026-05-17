@@ -1,48 +1,59 @@
 using EduConnect.Data;
 using EduConnect.Interfaces;
 using EduConnect.Models;
+using Microsoft.EntityFrameworkCore;
 
 namespace EduConnect.Services;
 
-// SRP: Only manages grades
-// DIP: Implements IGradeService abstraction
 public class GradeService : IGradeService
 {
-    private readonly List<GradeRecord> _gradeRecords;
+    private readonly IDbContextFactory<AppDbContext> _dbContextFactory;
     public event Action? OnGradesSubmitted;
 
-    public GradeService()
+    public GradeService(IDbContextFactory<AppDbContext> dbContextFactory)
     {
-        _gradeRecords = SeedData.GradeRecords;
+        _dbContextFactory = dbContextFactory;
     }
 
-    // SRP: Submitting grades is a focused operation
     public void SubmitGrade(GradeRecord record)
     {
-        var existing = _gradeRecords.FirstOrDefault(g => g.StudentId == record.StudentId && g.CourseId == record.CourseId);
+        using var context = _dbContextFactory.CreateDbContext();
+        var existing = context.GradeRecords
+            .FirstOrDefault(g => g.StudentId == record.StudentId && g.CourseId == record.CourseId);
+
         if (existing != null)
         {
             existing.Marks = record.Marks;
         }
         else
         {
-            _gradeRecords.Add(record);
+            context.GradeRecords.Add(new GradeRecord
+            {
+                StudentId = record.StudentId,
+                CourseId = record.CourseId,
+                Marks = record.Marks
+            });
         }
 
+        context.SaveChanges();
         OnGradesSubmitted?.Invoke();
     }
 
-    public List<GradeRecord> GetGradesForStudent(Guid studentId)
+    public List<GradeRecord> GetGradesForStudent(int studentId)
     {
-        return _gradeRecords
+        using var context = _dbContextFactory.CreateDbContext();
+        return context.GradeRecords
             .Where(g => g.StudentId == studentId)
+            .AsNoTracking()
             .ToList();
     }
 
-    public List<GradeRecord> GetGradesForCourse(Guid courseId)
+    public List<GradeRecord> GetGradesForCourse(int courseId)
     {
-        return _gradeRecords
+        using var context = _dbContextFactory.CreateDbContext();
+        return context.GradeRecords
             .Where(g => g.CourseId == courseId)
+            .AsNoTracking()
             .ToList();
     }
 }

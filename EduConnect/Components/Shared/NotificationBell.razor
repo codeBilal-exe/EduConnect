@@ -113,7 +113,7 @@
         await InvokeAsync(() =>
         {
             var currentUserId = AuthStateService?.CurrentUser?.Id;
-            if (currentUserId.HasValue && notification.UserId == currentUserId.Value)
+            if (currentUserId.HasValue && notification.StudentId == currentUserId.Value)
             {
                 LoadNotifications();
                 StateHasChanged();
@@ -121,7 +121,7 @@
         });
     }
 
-    private async void OnNotificationMarkedAsRead(Guid notificationId)
+    private async void OnNotificationMarkedAsRead(int notificationId)
     {
         await InvokeAsync(() =>
         {

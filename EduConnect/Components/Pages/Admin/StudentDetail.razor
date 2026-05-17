@@ -1,4 +1,4 @@
-@page "/admin/students/{Id:guid}"
+@page "/admin/students/{Id:int}"
 
 <PageTitle>EduConnect - Student Detail</PageTitle>
 
@@ -139,7 +139,7 @@
 
 @code {
     [Parameter]
-    public Guid Id { get; set; }
+    public int Id { get; set; }
 
     private Student? Student { get; set; }
     private List<Course>? enrolledCourses;

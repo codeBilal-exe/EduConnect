@@ -48,7 +48,7 @@
                             <div class="col-md-4 mb-3">
                                 <label class="form-label">Assign Faculty</label>
                                 <select class="form-select" @bind="newCourse.FacultyId">
-                                    <option value="@Guid.Empty">-- Select Faculty --</option>
+                                    <option value="0">-- Select Faculty --</option>
                                     @if (facultyMembers != null)
                                     {
                                         @foreach (var faculty in facultyMembers)
@@ -148,7 +148,7 @@
         ShowNewCourseForm = true;
         IsEditMode = false;
         ErrorMessage = string.Empty;
-        newCourse = new Course { Id = Guid.NewGuid() };
+        newCourse = new Course();
     }
 
     private void HideAddForm()
@@ -196,7 +196,7 @@
             return;
         }
 
-        if (newCourse.FacultyId == Guid.Empty)
+        if (newCourse.FacultyId == 0)
         {
             ErrorMessage = "Please assign a faculty member to this course.";
             return;
@@ -260,7 +260,7 @@
             return;
         }
 
-        if (newCourse.FacultyId == Guid.Empty)
+        if (newCourse.FacultyId == 0)
         {
             ErrorMessage = "Please assign a faculty member to this course.";
             return;
@@ -277,7 +277,7 @@
         RefreshCourses();
     }
 
-    private string GetFacultyName(Guid facultyId)
+    private string GetFacultyName(int facultyId)
     {
         var faculty = facultyMembers?.FirstOrDefault(f => f.Id == facultyId);
         return faculty?.FullName ?? "Unassigned";

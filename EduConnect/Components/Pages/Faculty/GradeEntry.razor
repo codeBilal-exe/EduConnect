@@ -88,7 +88,7 @@
 @code {
     private List<Course>? assignedCourses;
     private Course? selectedCourse;
-    private Dictionary<Guid, double> gradeMarks = new();
+    private Dictionary<int, double> gradeMarks = new();
 
     protected override void OnInitialized()
     {
@@ -102,7 +102,7 @@
 
     private void HandleCourseSelected(ChangeEventArgs e)
     {
-        if (Guid.TryParse(e.Value?.ToString(), out var courseId))
+        if (int.TryParse(e.Value?.ToString(), out var courseId))
         {
             selectedCourse = CourseService.GetById(courseId);
             if (selectedCourse != null && selectedCourse.EnrolledStudentIds != null)
@@ -123,7 +123,7 @@
         }
     }
 
-    private Student? GetStudent(Guid studentId)
+    private Student? GetStudent(int studentId)
     {
         return StudentService.GetById(studentId);
     }
@@ -141,7 +141,7 @@
 
             var grade = new GradeRecord
             {
-                Id = existing?.Id ?? Guid.NewGuid(),
+                Id = existing?.Id ?? 0,
                 StudentId = studentId,
                 CourseId = selectedCourse.Id,
                 Marks = marks
@@ -151,8 +151,7 @@
 
             var notification = new Notification
             {
-                Id = Guid.NewGuid(),
-                UserId = studentId,
+                StudentId = studentId,
                 Message = $"Grades have been posted for {selectedCourse.Title}.",
                 Type = NotificationType.GradePosted,
                 CreatedAt = DateTime.Now,

@@ -3,129 +3,190 @@ using EduConnect.Interfaces;
 using EduConnect.Models;
 using EduConnect.Models.Exceptions;
 using EduConnect.Models.Enums;
+using Microsoft.EntityFrameworkCore;
 
 namespace EduConnect.Services;
 
-// SRP: Only manages course data and enrollments
-// DIP: Implements ICourseService abstraction
 public class CourseService : ICourseService
 {
-    private readonly List<Course> _courses;
-    private readonly List<Enrollment> _enrollments;
+    private readonly IDbContextFactory<AppDbContext> _dbContextFactory;
     private readonly INotificationService _notificationService;
 
     public event Action? OnEnrollmentChanged;
 
-    public CourseService(INotificationService notificationService)
+    public CourseService(IDbContextFactory<AppDbContext> dbContextFactory, INotificationService notificationService)
     {
+        _dbContextFactory = dbContextFactory;
         _notificationService = notificationService;
-        _courses = SeedData.Courses;
-        _enrollments = SeedData.Enrollments;
     }
 
-
-
-    public Course? GetById(Guid id)
+    private static Course MapToCourse(Course source, IReadOnlyDictionary<int, List<int>> enrollmentMap)
     {
-        return _courses.FirstOrDefault(c => c.Id == id);
+        return new Course
+        {
+            Id = source.Id,
+            Code = source.Code,
+            Title = source.Title,
+            CreditHours = source.CreditHours,
+            MaxCapacity = source.MaxCapacity,
+            FacultyId = source.FacultyId,
+            EnrolledStudentIds = enrollmentMap.TryGetValue(source.Id, out var enrolled) ? new List<int>(enrolled) : new List<int>()
+        };
+    }
+
+    public Course? GetById(int id)
+    {
+        using var context = _dbContextFactory.CreateDbContext();
+        var course = context.Courses.AsNoTracking().FirstOrDefault(c => c.Id == id);
+        if (course == null)
+            return null;
+
+        var enrolledStudentIds = context.Enrollments
+            .Where(e => e.CourseId == id && e.State == EnrollmentState.Active)
+            .Select(e => e.StudentId)
+            .ToList();
+
+        return MapToCourse(course, new Dictionary<int, List<int>> { { id, enrolledStudentIds } });
     }
 
     public List<Course> GetAll()
     {
-        return new List<Course>(_courses);
+        using var context = _dbContextFactory.CreateDbContext();
+        var courses = context.Courses.AsNoTracking().ToList();
+        var courseIds = courses.Select(c => c.Id).ToList();
+
+        var enrollmentMap = context.Enrollments
+            .Where(e => courseIds.Contains(e.CourseId) && e.State == EnrollmentState.Active)
+            .AsNoTracking()
+            .GroupBy(e => e.CourseId)
+            .ToDictionary(g => g.Key, g => g.Select(e => e.StudentId).ToList());
+
+        return courses.Select(c => MapToCourse(c, enrollmentMap)).ToList();
     }
 
     public void Add(Course entity)
     {
-        if (!_courses.Any(c => c.Id == entity.Id))
+        using var context = _dbContextFactory.CreateDbContext();
+        if (context.Courses.Any(c => c.Id == entity.Id))
+            return;
+
+        context.Courses.Add(new Course
         {
-            _courses.Add(entity);
-        }
+            Id = entity.Id,
+            Code = entity.Code,
+            Title = entity.Title,
+            CreditHours = entity.CreditHours,
+            MaxCapacity = entity.MaxCapacity,
+            FacultyId = entity.FacultyId
+        });
+
+        context.SaveChanges();
     }
 
     public void Update(Course entity)
     {
-        var existing = GetById(entity.Id);
-        if (existing != null)
-        {
-            existing.Code = entity.Code;
-            existing.Title = entity.Title;
-            existing.CreditHours = entity.CreditHours;
-            existing.MaxCapacity = entity.MaxCapacity;
-            existing.FacultyId = entity.FacultyId;
-        }
+        using var context = _dbContextFactory.CreateDbContext();
+        var existing = context.Courses.FirstOrDefault(c => c.Id == entity.Id);
+        if (existing == null)
+            return;
+
+        existing.Code = entity.Code;
+        existing.Title = entity.Title;
+        existing.CreditHours = entity.CreditHours;
+        existing.MaxCapacity = entity.MaxCapacity;
+        existing.FacultyId = entity.FacultyId;
+
+        context.SaveChanges();
     }
 
-    public void Delete(Guid id)
+    public void Delete(int id)
     {
-        var course = GetById(id);
-        if (course != null)
-        {
-            _courses.Remove(course);
-        }
+        using var context = _dbContextFactory.CreateDbContext();
+        var course = context.Courses.FirstOrDefault(c => c.Id == id);
+        if (course == null)
+            return;
+
+        var enrollments = context.Enrollments.Where(e => e.CourseId == id).ToList();
+        if (enrollments.Any())
+            context.Enrollments.RemoveRange(enrollments);
+
+        var gradeRecords = context.GradeRecords.Where(g => g.CourseId == id).ToList();
+        if (gradeRecords.Any())
+            context.GradeRecords.RemoveRange(gradeRecords);
+
+        context.Courses.Remove(course);
+        context.SaveChanges();
     }
 
-    // OCP: New enrollment statuses can be computed without modifying this
     public List<Course> GetAvailableCourses()
     {
-        return _courses
+        return GetAll()
             .Where(c => c.EnrollmentStatus != EnrollmentStatus.Full)
             .ToList();
     }
 
-    public List<Course> GetCoursesByFaculty(Guid facultyId)
+    public List<Course> GetCoursesByFaculty(int facultyId)
     {
-        return _courses
-            .Where(c => c.FacultyId == facultyId)
-            .ToList();
+        using var context = _dbContextFactory.CreateDbContext();
+        var courses = context.Courses.AsNoTracking().Where(c => c.FacultyId == facultyId).ToList();
+        var courseIds = courses.Select(c => c.Id).ToList();
+
+        var enrollmentMap = context.Enrollments
+            .Where(e => courseIds.Contains(e.CourseId) && e.State == EnrollmentState.Active)
+            .AsNoTracking()
+            .GroupBy(e => e.CourseId)
+            .ToDictionary(g => g.Key, g => g.Select(e => e.StudentId).ToList());
+
+        return courses.Select(c => MapToCourse(c, enrollmentMap)).ToList();
     }
 
-    // DIP: Check if course code already exists (excluding current course in edit mode)
-    public bool CourseCodeExists(string code, Guid? excludeId = null)
+    public bool CourseCodeExists(string code, int? excludeId = null)
     {
-        return _courses.Any(c => c.Code.Equals(code, StringComparison.OrdinalIgnoreCase) && c.Id != excludeId);
+        using var context = _dbContextFactory.CreateDbContext();
+        return context.Courses.Any(c => c.Code == code && c.Id != excludeId);
     }
 
-    // SRP: Enrollment logic is concentrated here, not in components
-    public void EnrollStudent(Guid courseId, Guid studentId)
+    public void EnrollStudent(int courseId, int studentId)
     {
-        var course = GetById(courseId);
+        using var context = _dbContextFactory.CreateDbContext();
+        var course = context.Courses.FirstOrDefault(c => c.Id == courseId);
         if (course == null)
             throw new InvalidOperationException("Course not found.");
 
-        if (course.EnrollmentStatus == EnrollmentStatus.Full)
+        var activeEnrollmentCount = context.Enrollments.Count(e => e.CourseId == courseId && e.State == EnrollmentState.Active);
+        if (activeEnrollmentCount >= course.MaxCapacity)
             throw new CourseFullException(course.Title);
 
-        if (course.EnrolledStudentIds.Contains(studentId))
-            throw new InvalidOperationException("Student is already enrolled in this course.");
-
-        // OCP: Re-enrollment check prevents duplicates in same semester (service layer validation)
-        var existingEnrollment = _enrollments.FirstOrDefault(e =>
+        var existingEnrollment = context.Enrollments.FirstOrDefault(e =>
             e.StudentId == studentId &&
-            e.CourseId == courseId &&
-            e.State == EnrollmentState.Active);
-        if (existingEnrollment != null)
+            e.CourseId == courseId);
+
+        if (existingEnrollment?.State == EnrollmentState.Active)
             throw new InvalidOperationException("Student is already enrolled in this course in the current semester.");
 
-        course.EnrolledStudentIds.Add(studentId);
-
-        var enrollment = new Enrollment
+        if (existingEnrollment != null)
         {
-            Id = Guid.NewGuid(),
-            StudentId = studentId,
-            CourseId = courseId,
-            Semester = "Spring 2026",
-            State = EnrollmentState.Active,
-            EnrolledAt = DateTime.Now
-        };
+            existingEnrollment.State = EnrollmentState.Active;
+            existingEnrollment.Semester = "Spring 2026";
+            existingEnrollment.EnrolledAt = DateTime.Now;
+        }
+        else
+        {
+            context.Enrollments.Add(new Enrollment
+            {
+                StudentId = studentId,
+                CourseId = courseId,
+                Semester = "Spring 2026",
+                State = EnrollmentState.Active,
+                EnrolledAt = DateTime.Now
+            });
+        }
 
-        _enrollments.Add(enrollment);
+        context.SaveChanges();
 
-        // Send notification
         _notificationService.SendNotification(new Notification
         {
-            Id = Guid.NewGuid(),
-            UserId = studentId,
+            StudentId = studentId,
             Message = $"You have successfully enrolled in {course.Code}: {course.Title}.",
             Type = NotificationType.Enrollment,
             CreatedAt = DateTime.Now,
@@ -135,28 +196,24 @@ public class CourseService : ICourseService
         OnEnrollmentChanged?.Invoke();
     }
 
-    // SRP: Drop logic is concentrated here, not in components
-    public void DropCourse(Guid courseId, Guid studentId)
+    public void DropCourse(int courseId, int studentId)
     {
-        var course = GetById(courseId);
+        using var context = _dbContextFactory.CreateDbContext();
+        var course = context.Courses.FirstOrDefault(c => c.Id == courseId);
         if (course == null)
             throw new InvalidOperationException("Course not found.");
 
-        var enrollment = _enrollments.FirstOrDefault(e => e.StudentId == studentId && e.CourseId == courseId);
+        var enrollment = context.Enrollments.FirstOrDefault(e => e.StudentId == studentId && e.CourseId == courseId && e.State == EnrollmentState.Active);
         if (enrollment == null)
             throw new InvalidOperationException("Enrollment not found.");
 
-        if (enrollment.State != EnrollmentState.Active)
-            throw new InvalidOperationException("Can only drop active courses.");
-
         enrollment.State = EnrollmentState.Dropped;
-        course.EnrolledStudentIds.Remove(studentId);
 
-        // Send notification
+        context.SaveChanges();
+
         _notificationService.SendNotification(new Notification
         {
-            Id = Guid.NewGuid(),
-            UserId = studentId,
+            StudentId = studentId,
             Message = $"You have dropped the course {course.Code}: {course.Title}.",
             Type = NotificationType.Enrollment,
             CreatedAt = DateTime.Now,

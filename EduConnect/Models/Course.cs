@@ -4,13 +4,13 @@ namespace EduConnect.Models;
 
 public class Course
 {
-    public Guid Id { get; set; } = Guid.Empty;
+    public int Id { get; set; } = 0;
     public string Code { get; set; } = string.Empty;
     public string Title { get; set; } = string.Empty;
     public int CreditHours { get; set; } = 0;
     public int MaxCapacity { get; set; } = 0;
-    public Guid FacultyId { get; set; } = Guid.Empty;
-    public List<Guid> EnrolledStudentIds { get; set; } = new();
+    public int FacultyId { get; set; } = 0;
+    public List<int> EnrolledStudentIds { get; set; } = new();
 
     // OCP: Computed property allows new enrollment statuses without changing code
     public EnrollmentStatus EnrollmentStatus

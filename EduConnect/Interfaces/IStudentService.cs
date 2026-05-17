@@ -7,7 +7,7 @@ namespace EduConnect.Interfaces;
 public interface IStudentService : IRepository<Student>
 {
     List<Student> Search(string term);
-    double ComputeCGPA(Guid studentId);
+    double ComputeCGPA(int studentId);
 
     // Event fired when a student is updated, allowing other components to react
     event Action? OnStudentUpdated;

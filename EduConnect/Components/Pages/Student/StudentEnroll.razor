@@ -133,18 +133,6 @@
             CourseService.EnrollStudent(course.Id, studentId.Value);
             SuccessMessage = $"Successfully enrolled in {course.Title}!";
 
-            // Send Notification
-            var notification = new Notification
-            {
-                Id = Guid.NewGuid(),
-                UserId = studentId.Value,
-                Message = $"You have successfully enrolled in {course.Code} - {course.Title}.",
-                Type = NotificationType.Enrollment,
-                CreatedAt = DateTime.Now,
-                IsRead = false
-            };
-            NotificationService.SendNotification(notification);
-
             // Reload data
             LoadData();
         }

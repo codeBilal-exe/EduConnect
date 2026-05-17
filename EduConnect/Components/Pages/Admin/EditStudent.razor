@@ -1,4 +1,4 @@
-@page "/admin/students/edit/{Id:guid}"
+@page "/admin/students/edit/{Id:int}"
 
 <PageTitle>EduConnect - Edit Student</PageTitle>
 
@@ -72,7 +72,7 @@
 
 @code {
     [Parameter]
-    public Guid Id { get; set; }
+    public int Id { get; set; }
 
     private Student? Student { get; set; }
     private string ErrorMessage = string.Empty;

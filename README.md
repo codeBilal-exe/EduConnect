@@ -1,177 +1,158 @@
-<div align="center">
-<img src="./EduConnect/wwwroot/favicon.png" alt="EduConnect Logo" width="200" />
+# EduConnect
 
-# 🎓 EduConnect
-### *The Ultimate Academic Management Portal*
+EduConnect is an academic management portal built with ASP.NET Core 8 and Blazor Interactive Server. It supports three roles: Admin, Faculty, and Student.
 
-**A modern Academic Management Portal built with Blazor Server & ASP.NET Core 8**
+The app uses SQL Server through Entity Framework Core. Course enrollment, grade records, notifications, users, students, faculty, and courses are stored in `EduConnectDB`.
 
-[![.NET](https://img.shields.io/badge/.NET-8.0-512BD4?style=for-the-badge&logo=dotnet)](https://dotnet.microsoft.com/)
-[![Blazor](https://img.shields.io/badge/Blazor-Server-512BD4?style=for-the-badge&logo=blazor)](https://blazor.net)
-[![Bootstrap](https://img.shields.io/badge/Bootstrap-5.3-7952B3?style=for-the-badge&logo=bootstrap)](https://getbootstrap.com)
-[![SOLID](https://img.shields.io/badge/SOLID-100%25%20Compliant-brightgreen?style=for-the-badge)](./SOLID_COMPLIANCE_CHECKLIST.md)
+## Features
 
-<br />
+- Role-based login for Admin, Faculty, and Student users.
+- Admin dashboard for managing students and courses.
+- Faculty dashboard for assigned courses and grade entry.
+- Student dashboard for enrollment, enrolled courses, grades, and CGPA.
+- Course capacity tracking with Open, AlmostFull, and Full states.
+- Notifications for enrollment changes, grade posting, and announcements.
+- SQL Server database setup script with seed data.
 
-*Streamlining course management, student enrollment, grade tracking, and institutional communications in one integrated platform.*
+## Technology Stack
 
-[**Explore Features**](#-features) • [**Quick Start**](#-getting-started) • [**Architecture**](#-architecture) • [**API Reference**](#-service-interfaces)
+| Area | Technology |
+| --- | --- |
+| Framework | ASP.NET Core 8 |
+| UI | Blazor Interactive Server |
+| Database | SQL Server |
+| ORM | Entity Framework Core |
+| Styling | Bootstrap |
+| Language | C# |
 
-</div>
+## Project Structure
 
----
-
-## 📋 Table of Contents
-
-- [🎯 Overview](#-overview)
-- [✨ Features](#-features)
-- [🛠️ Technology Stack](#️-technology-stack)
-- [🏗️ Architecture](#️-architecture)
-- [📁 Project Structure](#-project-structure)
-- [🚀 Getting Started](#-getting-started)
-- [🔑 Default Accounts](#-default-accounts-for-testing)
-- [📐 SOLID Principles](#-solid-principles)
-- [🔌 Service Interfaces](#-service-interfaces)
-- [💾 Data Models](#-data-models)
-- [🔐 Role-Based Access](#-role-based-access-control)
-
----
-
-## 🎯 Overview
-
-**EduConnect** is a comprehensive academic management platform designed for modern educational institutions. It provides a seamless experience for three core user groups — **Students**, **Faculty**, and **Administrators** — each equipped with a tailored dashboard and purpose-built features.
-
-The system is engineered as a **Blazor Interactive Server** application, prioritizing clean architecture, type safety, and strict adherence to **SOLID design principles**.
-
----
-
-## ✨ Features
-
-### 👤 Authentication & Security
-- **Role-Based Access Control (RBAC):** Dedicated permissions for Student, Faculty, and Admin.
-- **Glassmorphism Login UI:** High-end, frosted-glass interface with deep blue brand gradients.
-- **Password Visibility Toggle:** Built-in show/hide functionality for secure credential entry.
-- **Route Guards:** `AuthGuard` implementation protecting sensitive pages.
-
-### 📚 Course Management
-- **Lifecycle Management:** Create, update, and archive courses with ease.
-- **Dynamic Capacity:** Real-time tracking of course availability (`Open` → `Almost Full` → `Full`).
-- **Faculty Allocation:** Assign courses to specific faculty members with verified data integrity.
-
-### 🎓 Student Experience
-- **Interactive Enrollment:** Browse catalogs and enroll in courses instantly.
-- **Academic Tracking:** Monitor enrolled credit hours and performance metrics.
-- **Digital Transcripts:** View full grade history and weighted CGPA.
-
-### 📊 Grade & Performance
-- **Automated Grading:** Intelligent mapping from Marks → Letter Grades → GPA Points.
-- **CGPA Engine:** Real-time credit-weighted CGPA computation.
-- **Faculty Portal:** Streamlined interface for grade submission and review.
-
-### 🔔 Advanced Notification System
-- **Event-Driven Alerts:** Instant notifications for enrollment confirmations and grade updates.
-- **Interactive Popup:** Modern bell dropdown with "Mark all as read" and "Click-outside to close" functionality.
-- **Real-time Synchronization:** UI updates instantly across components when notifications are managed.
-- **Dedicated Inbox:** A full-page notification center with detailed status filtering.
-
----
-
-## 🛠️ Technology Stack
-
-| Component | Technology |
-|---|---|
-| **Core Framework** | ASP.NET Core 8.0 |
-| **Frontend** | Blazor Interactive Server (C# / Razor) |
-| **Design System** | Premium Blue & Gold Palette (Glassmorphism) |
-| **Styling** | Bootstrap 5.3 + Standardized CSS Architecture |
-| **Icons** | Bootstrap Icons 1.11 |
-| **Typography** | Google Fonts (Outfit & Inter) |
-| **Inversion of Control** | Native .NET Dependency Injection |
-| **Data Engine** | In-memory Repository Pattern (Seeded) |
-
----
-
-### Event System
-EduConnect utilizes a decoupled event-driven architecture to keep the UI synchronized:
-- `OnEnrollmentChanged` 🔄 Updates navigation counters.
-- `OnGradesSubmitted` 📊 Refreshes transcript views.
-- `OnNewNotification` 🔔 Triggers real-time alerts.
-
----
-
-## 🚀 Getting Started
-
-### 1. Prerequisites
-- [.NET 8.0 SDK](https://dotnet.microsoft.com/download)
-- Visual Studio 2022 or VS Code (C# Dev Kit)
-
-### 2. Installation & Run
-```bash
-# Clone the repository
-git clone https://github.com/your-username/EduConnect.git
-
-# Navigate to the project folder
-cd EduConnect/EduConnect
-
-# Build and run
-dotnet run
+```text
+EduConnect/
+  Components/
+    Auth/                 Route guards and navigation auth helpers
+    Layout/               App layouts
+    Pages/                Admin, Faculty, Student, login, dashboard pages
+    Shared/               Reusable UI components
+  Data/
+    AppDbContext.cs       EF Core database context
+    Entities/             Database-specific user/student/faculty entities
+  Interfaces/             Service contracts
+  Models/                 Domain models and enums
+  Services/               Database-backed business logic
+  Program.cs              App startup and dependency injection
+EduConnectSQL.sql         SQL Server database setup and seed data
+README.md
 ```
 
-### 3. Access
-Open [https://localhost:7000](https://localhost:7000) in your browser.
+## Prerequisites
 
----
+- .NET 8 SDK
+- SQL Server or SQL Server Express
+- `sqlcmd` or SQL Server Management Studio
 
-## 🔑 Default Accounts for Testing
+The current connection string in `EduConnect/appsettings.json` is:
 
-| Role | Username | Password |
-|---|---|---|
-| 🛡️ **Admin** | `admin@educonnect.com` | `admin123` |
-| 👨‍🏫 **Faculty** | `faculty1@educonnect.com` | `faculty123` |
-| 🎓 **Student** | `student1@educonnect.com` | `student123` |
-
----
-
-## 📐 SOLID Principles Implementation
-
-| Principle | Detail |
-|---|---|
-| **Single Responsibility** | Services like `GradeService` only handle grading logic, not UI or auth. |
-| **Open/Closed** | New role types can be added to the hierarchy without modifying existing services. |
-| **Liskov Substitution** | `Student` and `Faculty` objects can be used anywhere a `Person` is expected. |
-| **Interface Segregation** | Small, focused interfaces (e.g., `IGradeService`) prevent "fat" dependencies. |
-| **Dependency Inversion** | High-level components depend on abstractions (`IStudentService`), not concrete implementations. |
-
----
-
-## 🔌 Service Interfaces
-
-<details>
-<summary><b>View Student Service API</b></summary>
-
-```csharp
-public interface IStudentService : IRepository<Student>
-{
-    List<Student> Search(string term);
-    double ComputeCGPA(Guid studentId);
-}
+```json
+"DefaultConnection": "Server=BEAST\\SQLEXPRESS;Database=EduConnectDB;Trusted_Connection=True;TrustServerCertificate=True;"
 ```
-</details>
 
-<details>
-<summary><b>View Course Service API</b></summary>
+If your SQL Server instance name is different, update this value before running the app.
+
+## Database Setup
+
+Run the SQL script from the repository root:
+
+```powershell
+sqlcmd -S "BEAST\SQLEXPRESS" -E -i EduConnectSQL.sql
+```
+
+The script will:
+
+- Create `EduConnectDB` if it does not already exist.
+- Drop and recreate the assignment tables.
+- Seed admin, faculty, student, course, enrollment, and grade data.
+
+Important: running the script resets the database tables and deletes existing data.
+
+## Run the App
+
+From the repository root:
+
+```powershell
+dotnet build EduConnect\EduConnect.sln
+dotnet run --project EduConnect\EduConnect.csproj
+```
+
+Default local URLs are configured in `EduConnect/Properties/launchSettings.json`:
+
+- `http://localhost:5153`
+- `https://localhost:7088`
+
+Open the login page:
+
+```text
+http://localhost:5153/login
+```
+
+## Default Accounts
+
+| Role | Email | Password |
+| --- | --- | --- |
+| Admin | `admin@edu.com` | `admin123` |
+| Faculty | `faculty1@edu.com` | `faculty123` |
+| Faculty | `faculty2@edu.com` | `faculty123` |
+| Faculty | `faculty3@edu.com` | `faculty123` |
+| Student | `student1@edu.com` | `student123` |
+| Student | `student2@edu.com` | `student123` |
+| Student | `student3@edu.com` | `student123` |
+| Student | `student4@edu.com` | `student123` |
+
+## Database Tables
+
+| Table | Purpose |
+| --- | --- |
+| `Users` | Admin login accounts |
+| `Students` | Student login/profile data |
+| `Faculty` | Faculty login/profile data |
+| `Courses` | Course catalog and faculty assignment |
+| `Enrollments` | Active and dropped student course enrollments |
+| `GradeRecords` | Marks for students in courses |
+| `Notifications` | Student notifications |
+
+## Main Services
+
+| Service | Responsibility |
+| --- | --- |
+| `AuthStateService` | Login, logout, current user state |
+| `StudentService` | Student CRUD, search, CGPA calculation |
+| `CourseService` | Course CRUD, enrollment, drop course |
+| `GradeService` | Submit and retrieve grade records |
+| `NotificationService` | Send, list, and mark notifications |
+
+Service IDs use SQL integer identity values, not GUIDs.
+
+Example interface methods:
 
 ```csharp
 public interface ICourseService : IRepository<Course>
 {
     List<Course> GetAvailableCourses();
-    void EnrollStudent(Guid courseId, Guid studentId);
-    event Action OnEnrollmentChanged;
+    List<Course> GetCoursesByFaculty(int facultyId);
+    bool CourseCodeExists(string code, int? excludeId = null);
+    void EnrollStudent(int courseId, int studentId);
+    void DropCourse(int courseId, int studentId);
 }
 ```
-</details>
 
----
+```csharp
+public interface IStudentService : IRepository<Student>
+{
+    List<Student> Search(string term);
+    double ComputeCGPA(int studentId);
+}
+```
 
-## 📄 License
-This project is developed for **educational purposes**. All rights reserved.
+## License
+
+This project is for educational assignment use.

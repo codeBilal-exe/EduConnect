@@ -6,8 +6,8 @@ namespace EduConnect.Interfaces;
 public interface IGradeService
 {
     void SubmitGrade(GradeRecord record);
-    List<GradeRecord> GetGradesForStudent(Guid studentId);
-    List<GradeRecord> GetGradesForCourse(Guid courseId);
+    List<GradeRecord> GetGradesForStudent(int studentId);
+    List<GradeRecord> GetGradesForCourse(int courseId);
 
     event Action? OnGradesSubmitted;
 }

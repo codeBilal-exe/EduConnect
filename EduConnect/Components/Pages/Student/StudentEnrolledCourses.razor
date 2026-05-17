@@ -133,18 +133,6 @@
             CourseService.DropCourse(course.Id, studentId.Value);
             SuccessMessage = $"Successfully dropped {course.Title}!";
 
-            // Send Notification
-            var notification = new Notification
-            {
-                Id = Guid.NewGuid(),
-                UserId = studentId.Value,
-                Message = $"You have dropped the course {course.Code} - {course.Title}.",
-                Type = NotificationType.Enrollment,
-                CreatedAt = DateTime.Now,
-                IsRead = false
-            };
-            NotificationService.SendNotification(notification);
-
             // Reload data
             LoadData();
         }

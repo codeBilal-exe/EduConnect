@@ -1,56 +1,55 @@
 using EduConnect.Data;
 using EduConnect.Interfaces;
 using EduConnect.Models;
+using Microsoft.EntityFrameworkCore;
 
 namespace EduConnect.Services;
 
-// SRP: Only manages notifications
-// DIP: Implements INotificationService abstraction
 public class NotificationService : INotificationService
 {
-    private readonly List<Notification> _notifications;
+    private readonly IDbContextFactory<AppDbContext> _dbContextFactory;
 
-    // Event-driven: Components subscribe to this and re-render reactively
     public event Action<Notification>? OnNewNotification;
-    public event Action<Guid>? OnNotificationMarkedAsRead;
+    public event Action<int>? OnNotificationMarkedAsRead;
 
-    public NotificationService()
+    public NotificationService(IDbContextFactory<AppDbContext> dbContextFactory)
     {
-        _notifications = SeedData.Notifications;
+        _dbContextFactory = dbContextFactory;
     }
 
-
-    // SRP: Sending notifications is a core responsibility
     public void SendNotification(Notification notification)
     {
-        _notifications.Add(notification);
-        // Fire event so all subscribers re-render (essential for Blazor reactivity)
+        using var context = _dbContextFactory.CreateDbContext();
+        context.Notifications.Add(notification);
+        context.SaveChanges();
         OnNewNotification?.Invoke(notification);
     }
 
-    public List<Notification> GetNotificationsForUser(Guid userId)
+    public List<Notification> GetNotificationsForUser(int studentId)
     {
-        return _notifications
-            .Where(n => n.UserId == userId)
+        using var context = _dbContextFactory.CreateDbContext();
+        return context.Notifications
+            .Where(n => n.StudentId == studentId)
             .OrderByDescending(n => n.CreatedAt)
+            .AsNoTracking()
             .ToList();
     }
 
-    public void MarkAsRead(Guid notificationId)
+    public void MarkAsRead(int notificationId)
     {
-        var notification = _notifications.FirstOrDefault(n => n.Id == notificationId);
-        if (notification != null)
-        {
-            notification.IsRead = true;
-            // Fire event so all subscribers (like NotificationBell) update the counter
-            OnNotificationMarkedAsRead?.Invoke(notificationId);
-        }
+        using var context = _dbContextFactory.CreateDbContext();
+        var notification = context.Notifications.FirstOrDefault(n => n.Id == notificationId);
+        if (notification == null)
+            return;
+
+        notification.IsRead = true;
+        context.SaveChanges();
+        OnNotificationMarkedAsRead?.Invoke(notificationId);
     }
 
-    public int GetUnreadCount(Guid userId)
+    public int GetUnreadCount(int studentId)
     {
-        return _notifications
-            .Where(n => n.UserId == userId && !n.IsRead)
-            .Count();
+        using var context = _dbContextFactory.CreateDbContext();
+        return context.Notifications.Count(n => n.StudentId == studentId && !n.IsRead);
     }
 }
